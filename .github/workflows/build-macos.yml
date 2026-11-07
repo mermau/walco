@@ -34,7 +34,7 @@ jobs:
       - name: Test del processore (blocchi, CC MIDI, ON/OFF, stato)
         run: |
           cmake -B build-test -DFTG_BUILD_PLUGIN=OFF -DFTG_BUILD_TESTS=OFF -DFTG_BUILD_PROCESSOR_TEST=ON \
-                -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DFETCHCONTENT_BASE_DIR=build/_deps
+                -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DJUCE_DIR="$PWD/build/_deps/juce-src"
           cmake --build build-test --parallel
           ./build-test/processor_test_artefacts/Release/processor_test
 
