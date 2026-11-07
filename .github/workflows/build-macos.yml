@@ -46,7 +46,7 @@ jobs:
           for p in "dist/FTG-1/"*; do codesign --force --deep --sign - "$p"; done
           cp scripts/installa.command "dist/FTG-1/Installa FTG-1.command"
           chmod +x "dist/FTG-1/Installa FTG-1.command"
-          cp README.md "dist/FTG-1/"
+          cp README.md docs/FTG-1_Manuale.pdf "dist/FTG-1/"
           lipo -info "dist/FTG-1/FTG-1.vst3/Contents/MacOS/FTG-1"
           ls "dist/FTG-1/FTG-1.app/Contents/Resources/"   # deve contenere Icon.icns
           (cd dist && ditto -c -k --keepParent "FTG-1" ../FTG1-macOS.zip)

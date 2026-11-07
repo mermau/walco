@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>FTG-1 — Manuale d'uso</title>
+<style>
+@font-face { font-family: "Archivo"; src: url("fonts/Archivo.ttf"); font-weight: 100 900; font-stretch: 62% 125%; font-style: normal; }
+@font-face { font-family: "Archivo"; src: url("fonts/Archivo-Italic.ttf"); font-weight: 100 900; font-stretch: 62% 125%; font-style: italic; }
+
+:root {
+  --enamel: #F2C4F4;      /* smalto del pedale */
+  --enamel-deep: #E3A6E8;
+  --plum: #2B1231;        /* inchiostro */
+  --violet: #8E3C94;
+  --mist: #F8ECF9;        /* fondo dei riquadri */
+  --chrome: #857C8B;      /* didascalie */
+  --paper: #FFFFFF;
+}
+
+@page {
+  size: A4;
+  margin: 22mm 18mm 20mm 18mm;
+  @bottom-left  { content: "FTG-1  Manuale d'uso"; font: 400 7.5pt "Archivo"; font-stretch: 112%; color: #857C8B; }
+  @bottom-right { content: counter(page); font: 700 8pt "Archivo"; font-stretch: 125%; color: #2B1231; }
+}
+@page cover { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+@page back  { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  margin: 0; color: var(--plum); background: var(--paper);
+  font-family: "Archivo", sans-serif; font-stretch: 100%; font-weight: 400;
+  font-size: 9.6pt; line-height: 1.52; hyphens: auto;
+  font-feature-settings: "kern", "liga";
+}
+p { margin: 0 0 0.62em; }
+em { font-style: italic; }
+strong { font-weight: 650; }
+a { color: inherit; text-decoration: none; }
+
+/* --- COPERTINA: un cartoncino da blister, come quelli appesi agli espositori --- */
+.cover {
+  page: cover; height: 297mm; width: 210mm; position: relative; overflow: hidden;
+  background: var(--enamel);
+}
+.cover .hang {
+  position: absolute; top: 9mm; left: 50%; width: 30mm; height: 9mm; margin-left: -15mm;
+  border-radius: 5mm; background: #fff;
+  box-shadow: inset 0 1.2mm 1.6mm rgba(43,18,49,.28);
+}
+.cover .title {
+  position: absolute; left: 14mm; top: 24mm; margin: 0;
+  font-size: 128pt; line-height: .82; font-weight: 900; font-stretch: 125%; letter-spacing: -2pt;
+}
+.cover .subtitle {
+  position: absolute; left: 15mm; top: 68mm; width: 80mm;
+  font-size: 13pt; line-height: 1.25; font-weight: 500; font-stretch: 112%;
+}
+.cover .blister {
+  position: absolute; right: 14mm; top: 64mm; width: 104mm; height: 196mm;
+  border-radius: 14mm; background: rgba(255,255,255,.22);
+  border: .5mm solid rgba(255,255,255,.75);
+  box-shadow: inset 0 0 0 .3mm rgba(43,18,49,.08), 0 1.5mm 4mm rgba(43,18,49,.12);
+}
+.cover .blister::after {   /* riflesso della plastica */
+  content: ""; position: absolute; left: 7mm; top: 8mm; width: 13mm; height: 120mm; border-radius: 8mm;
+  background: linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,0));
+}
+.cover .blister img { position: absolute; left: 7mm; top: 7mm; width: 90mm; }
+.cover .claims {
+  position: absolute; left: 15mm; bottom: 46mm; width: 70mm;
+  font-size: 9.5pt; line-height: 1.4;
+}
+.cover .claims p { margin: 0 0 3.2mm; padding-left: 4mm; border-left: .9mm solid var(--plum); }
+.cover .maker {
+  position: absolute; left: 15mm; bottom: 16mm; font-size: 8.5pt; line-height: 1.35;
+}
+.cover .maker b { display: block; font-size: 12pt; font-weight: 800; font-stretch: 125%; }
+
+/* --- CAPITOLI --- */
+.chapter { break-before: page; }
+.chapter-head { display: grid; grid-template-columns: 34mm 1fr; column-gap: 8mm; margin: 0 0 9mm; }
+.chapter-head .no {
+  font-size: 42pt; font-weight: 300; font-stretch: 62%; line-height: .9; color: var(--violet);
+}
+h1 {
+  margin: 0; font-size: 30pt; line-height: .98; font-weight: 850; font-stretch: 125%; letter-spacing: -.6pt;
+  text-wrap: balance; hyphens: manual;
+}
+.chapter-head .lead { grid-column: 2; margin-top: 4mm; font-size: 11.5pt; line-height: 1.42; font-weight: 400; max-width: 125mm; }
+
+h2 {
+  margin: 6mm 0 2mm; font-size: 12.5pt; line-height: 1.2; font-weight: 750; font-stretch: 118%;
+  break-after: avoid;
+}
+h3 { margin: 4mm 0 1mm; font-size: 9.8pt; font-weight: 700; break-after: avoid; }
+
+/* griglia: colonna laterale per note e didascalie, colonna principale per il testo */
+.row { display: grid; grid-template-columns: 34mm 1fr; column-gap: 8mm; }
+.row > .side { font-size: 7.8pt; line-height: 1.42; color: var(--chrome); padding-top: 1.2mm; }
+.row > .side b { color: var(--plum); font-weight: 650; }
+.row > .main { max-width: 128mm; }
+.wide { grid-column: 1 / -1; }
+
+.note {
+  background: var(--mist); border-radius: 2.2mm; padding: 3.2mm 4mm; margin: 3mm 0 4mm;
+  font-size: 9pt; break-inside: avoid;
+}
+.note p:last-child { margin: 0; }
+
+blockquote {
+  margin: 5mm 0; padding: 0; font-size: 15pt; line-height: 1.2; font-weight: 650; font-stretch: 110%;
+}
+blockquote cite { display: block; margin-top: 2mm; font-size: 8pt; font-weight: 400; font-style: normal; font-stretch: 100%; color: var(--chrome); }
+
+/* linea del tempo */
+.timeline { list-style: none; margin: 2mm 0 0; padding: 0; break-inside: avoid; }
+.timeline li { display: grid; grid-template-columns: 17mm 1fr; column-gap: 4mm; padding: 1.7mm 0; border-top: .25mm solid #E6D3E8; }
+.timeline li:last-child { border-bottom: .25mm solid #E6D3E8; }
+.timeline .y { font-weight: 800; font-stretch: 125%; font-size: 9.5pt; }
+
+/* la serie Walco: otto scatoline colorate */
+.series { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.4mm; margin: 4mm 0 2mm; break-inside: avoid; }
+.series div { border-radius: 1.6mm; padding: 2.4mm 2.6mm 2.2mm; min-height: 17mm; font-size: 7.6pt; line-height: 1.25; }
+.series b { display: block; font-size: 8pt; font-weight: 700; margin-bottom: .8mm; }
+.series .me { outline: .6mm solid var(--plum); outline-offset: .6mm; }
+
+/* figure */
+figure { margin: 0 0 5mm; break-inside: avoid; }
+figure img { display: block; width: 100%; }
+figcaption { font-size: 7.8pt; line-height: 1.4; color: var(--chrome); margin-top: 2mm; }
+
+.split { display: grid; grid-template-columns: 66mm 1fr; column-gap: 9mm; }
+.split.narrow { grid-template-columns: 58mm 1fr; }
+.gui { position: relative; width: 66mm; }
+.gui img { border-radius: 2mm; }
+.pin {
+  position: absolute; width: 5.4mm; height: 5.4mm; margin: -2.7mm 0 0 -2.7mm; border-radius: 50%;
+  background: var(--enamel); color: var(--plum); border: .45mm solid var(--plum);
+  font-size: 7pt; font-weight: 800; line-height: 4.6mm; text-align: center;
+}
+.legend { list-style: none; margin: 0; padding: 0; counter-reset: l; }
+.legend li { counter-increment: l; position: relative; padding: 0 0 2.6mm 8mm; font-size: 8.8pt; line-height: 1.42; break-inside: avoid; }
+.legend li::before {
+  content: counter(l); position: absolute; left: 0; top: .2mm; width: 5mm; height: 5mm; border-radius: 50%;
+  background: var(--enamel); border: .4mm solid var(--plum); font-size: 6.6pt; font-weight: 800; line-height: 4.3mm; text-align: center;
+}
+.legend b { font-weight: 700; }
+
+/* passi numerati (installazione: è davvero una sequenza) */
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 12mm 1fr; padding: 2.6mm 0; border-top: .25mm solid #E6D3E8; break-inside: avoid; }
+.steps li::before { content: counter(s); font-size: 20pt; font-weight: 300; font-stretch: 62%; line-height: 1; color: var(--violet); }
+
+/* tabelle */
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 8.6pt; line-height: 1.35; break-inside: avoid; }
+th { text-align: left; font-weight: 700; padding: 1.8mm 2mm 1.4mm 0; border-bottom: .5mm solid var(--plum); vertical-align: bottom; }
+td { padding: 1.7mm 2mm 1.7mm 0; border-bottom: .25mm solid #E6D3E8; vertical-align: top; }
+td.k { font-weight: 650; white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* la mappa di FUZZ INCREASE */
+.map { position: relative; height: 112mm; margin: 2mm 0 4mm; break-inside: avoid; }
+.map svg { position: absolute; left: 24mm; top: 0; width: 126mm; }
+.map svg .tick { font: 800 11px "Archivo"; font-stretch: 125%; fill: #2B1231; text-anchor: middle; }
+.zone { position: absolute; width: 44mm; font-size: 8.4pt; line-height: 1.38; }
+.zone b { display: block; font-size: 10pt; font-weight: 800; font-stretch: 118%; margin-bottom: .6mm; }
+.zone.z1 { left: 0; top: 62mm; }
+.zone.z2 { left: 61mm; top: 95mm; width: 52mm; text-align: center; }
+.zone.z3 { right: 0; top: 62mm; text-align: right; }
+
+kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(--mist); border-radius: 1mm; padding: .1mm 1.2mm; }
+
+.sources { font-size: 7.8pt; line-height: 1.45; }
+.sources li { margin-bottom: 1.4mm; }
+.sources span { color: var(--chrome); word-break: break-all; }
+
+.back { page: back; break-before: page; height: 297mm; background: var(--plum); color: var(--enamel); position: relative; }
+.back .mark { position: absolute; left: 18mm; bottom: 20mm; font-size: 9pt; line-height: 1.45; }
+.back .mark b { display: block; font-size: 24pt; font-weight: 900; font-stretch: 125%; line-height: 1; margin-bottom: 3mm; }
+.back .hang { position: absolute; top: 9mm; left: 50%; width: 30mm; height: 9mm; margin-left: -15mm; border-radius: 5mm; background: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COPERTINA ============================== -->
+<section class="cover">
+  <div class="hang"></div>
+  <h1 class="title">FTG-1</h1>
+  <div class="subtitle">Fuzz Tone Generator<br>Manuale d'uso del plugin</div>
+  <div class="blister"><img src="img/pedale.png" alt="Il pedale FTG-1"></div>
+  <div class="claims">
+    <p>Il fuzz da cintura degli anni Settanta, ricostruito componente per componente.</p>
+    <p>Una manopola, un interruttore, un suono che non somiglia a nessun altro.</p>
+    <p>VST3, AU e applicazione autonoma per macOS. Comandabile dalla tua tastiera MIDI.</p>
+  </div>
+  <div class="maker"><b>Collateral Effects</b>Emulazione del Walco Full Frequency Fuzz Tone Generator</div>
+</section>
+
+<!-- ============================== 1. STORIA ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">1</div>
+    <div>
+      <h1>Un fuzz da appendere alla cintura</h1>
+    </div>
+    <p class="lead">Il Fuzz Tone Generator non nasce per i palchi. È un accessorio da negozio di elettronica, venduto
+    da un'azienda di puntine per giradischi, pensato per chi voleva il suono distorto dei dischi rock senza spendere
+    quanto costava una chitarra.</p>
+  </div>
+
+  <div class="row">
+    <div class="side"><b>Dalla puntina al fuzz.</b> Walco firmava puntine di zaffiro e di diamante già negli anni
+    Quaranta, prima a East Orange, poi a Clifton, nel New Jersey.</div>
+    <div class="main">
+      <h2>La febbre del fuzz</h2>
+      <p>Il primo fuzz in commercio è il Maestro FZ-1 Fuzz-Tone, che Gibson mette sul mercato nel 1962 dopo che il
+      tecnico di Nashville Glenn Snoddy aveva sentito, quasi per caso, una distorsione nata da un canale del mixer guasto.
+      Quando nel 1965 il riff di <em>Satisfaction</em> dei Rolling Stones passa per un Fuzz-Tone, il suono diventa una
+      moda: in pochi anni compaiono scatole fuzz in Inghilterra, negli Stati Uniti, in Italia e soprattutto in Giappone.</p>
+      <p>Le fabbriche giapponesi lavorano per conto terzi. Gli importatori americani comprano chitarre, amplificatori ed
+      effetti e li vendono con marchi propri: Kent, per esempio, era il marchio del grossista newyorkese Buegeleisen
+      &amp; Jacobson, che dai primi anni Sessanta importava strumenti fatti in Giappone. Il <strong>Kent EA-3 Fuzz Tone
+      Bender</strong> ha esattamente lo stesso circuito del Walco: lo stesso progetto, venduto con due nomi diversi.</p>
+
+      <h2>Walco e la sua serie di scatoline colorate</h2>
+      <p>Walco Electronics era un'azienda del New Jersey nota soprattutto per le puntine dei giradischi. Negli anni
+      Settanta (i collezionisti indicano il 1974) mette in catalogo una piccola linea di effetti fatti in Giappone,
+      economici e rivolti ai principianti: otto scatoline, ognuna di un colore, tutte a batteria da 9 V e senza presa
+      per l'alimentatore.</p>
+    </div>
+  </div>
+
+  <div class="series">
+    <div style="background:#BFD4F2"><b>Bass-Treble Expander</b>esaltatore di bassi o di acuti</div>
+    <div style="background:#BFEBB8"><b>Sound-Go-Round</b>tremolo</div>
+    <div class="me" style="background:var(--enamel)"><b>Fuzz Tone Generator</b>il fuzz, in rosa</div>
+    <div style="background:#B9D3BE"><b>Automatic Level Control</b>controllo automatico del livello</div>
+    <div style="background:#FBD0A6"><b>Signal Booster</b>amplificatore di segnale</div>
+    <div style="background:#FBEFA0"><b>Acoustic Feedback Eliminator</b>una specie di noise gate</div>
+    <div style="background:#F6B9B4"><b>Accu-Tuner</b>diapason elettronico</div>
+    <div style="background:#D9C3AE"><b>Chord and Note Sustainer</b>compressore, l'unico a pedale</div>
+  </div>
+  <p style="font-size:7.8pt;color:var(--chrome);margin:0 0 4mm 42mm">La serie Walco come la descrive un collezionista
+  che la possiede al completo. I colori qui sono indicativi.</p>
+</section>
+
+<section>
+  <div class="row">
+    <div class="side"><b>Non è un pedale.</b> Niente interruttore a pedale: l'effetto si accende con il pollice, sulla
+    scatola agganciata alla cintura.</div>
+    <div class="main">
+      <h2>Come si usava</h2>
+      <p>Il Fuzz Tone Generator non si appoggia per terra. Ha una clip sul retro e si aggancia alla cintura o alla
+      tracolla. Al posto della presa d'ingresso esce un cavetto con lo spinotto, che va infilato direttamente nella
+      chitarra; dall'altra parte una presa jack porta il segnale all'amplificatore. Sul frontale ci sono soltanto una
+      manopola, FUZZ INCREASE, e un interruttore a slitta ON/OFF da azionare con il pollice tra una parte e l'altra
+      del brano.</p>
+      <p>Era il fuzz di chi suonava in camera o in garage: si comprava per pochi dollari, si collegava al primo
+      amplificatore disponibile e si girava la manopola. Abbassandola il suono si fa più scuro e morbido; alzandola si
+      apre tutta la gamma di frequenze, la scritta "Full Frequency" del frontale, insieme a un fuzz sottile e
+      scoppiettante, decisamente lo-fi.</p>
+
+      <h2>La seconda vita</h2>
+      <p>Per decenni il Fuzz Tone Generator è stato una curiosità. Grosse scorte rimaste invendute sono riemerse da un
+      magazzino del New Jersey e sono circolate come merce nuova d'epoca, a volte vendute per un dollaro. Online non
+      esistevano nemmeno demo del suono, e chi ne ha ricostruito il circuito si chiedeva se fosse un pezzo raro e
+      sottovalutato o semplicemente un brutto fuzz.</p>
+      <p>Steve Albini, che ne conservava uno nel suo studio Electrical Audio di Chicago, aveva un'opinione precisa.
+      Nel 2019, mostrando la sua collezione agli ospiti di EarthQuaker Devices:</p>
+      <blockquote>“The worst fuzz tone ever.”<cite>Steve Albini. Poi aggiunge che la chitarra diventa molto più
+      bassa di volume, e si chiede perché mai qualcuno dovrebbe volerlo.</cite></blockquote>
+      <p>Oggi ha un piccolo seguito tra i collezionisti di effetti giapponesi strani e tra chi costruisce pedali da sé.
+      È un apparecchio da un trucco solo, ma quel trucco non lo fa nessun altro fuzz.</p>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:3mm">
+    <div class="side"><b>Date</b> ricavate dalle fonti elencate in fondo al manuale.</div>
+    <ul class="timeline main">
+      <li><span class="y">1962</span><span>Gibson presenta il Maestro FZ-1 Fuzz-Tone.</span></li>
+      <li><span class="y">1965</span><span><em>Satisfaction</em> porta il fuzz in classifica. Esce il Tone Bender inglese.</span></li>
+      <li><span class="y">1974 ca.</span><span>La serie di effetti Walco, con il Fuzz Tone Generator rosa.</span></li>
+      <li><span class="y">2019</span><span>Albini lo definisce il peggior fuzz di sempre, davanti a una telecamera.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================== 2. IL SUONO ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">2</div>
+    <div><h1>Che cosa aspettarsi</h1></div>
+    <p class="lead">Se cerchi il muro di un Big Muff o la cremosità di un Fuzz Face, questo non è il fuzz giusto.
+    Se cerchi un carattere che si riconosce in mezzo secondo, lo è.</p>
+  </div>
+  <div class="row">
+    <div class="side"><b>Fedele, non addomesticato.</b> FTG-1 non aggiunge controlli di tono né compensa il volume:
+    il carattere dell'originale, difetti compresi, è quello che si sente.</div>
+    <div class="main">
+      <p>Il Fuzz Tone Generator ha due anime e una sola manopola per passare dall'una all'altra.</p>
+      <h3>Il primo stadio</h3>
+      <p>Pieno, scuro, quasi ovattato. Con una pennata leggera resta abbastanza pulito; suonando forte si comprime e si
+      sporca con un overdrive caldo. È anche la parte più forte di volume.</p>
+      <h3>Il ramo fuzz</h3>
+      <p>Sottile, ronzante, fatto di spilli. Le note hanno un attacco tagliente e, mentre si spengono, si sbriciolano in
+      un crepitio irregolare prima di sparire: il tipico effetto "gated" dei fuzz che lavorano al limite. Il volume è
+      più basso e il basso quasi scompare.</p>
+      <h3>In mezzo</h3>
+      <p>FUZZ INCREASE miscela le due anime. Nelle posizioni intermedie il ronzio del ramo fuzz si appoggia sopra il
+      suono scuro del primo stadio, come un alone elettrico. Il modo in cui le due parti si sommano dipende dalla nota e
+      dalla dinamica: alcune note escono più piene, altre più vuote.</p>
+      <div class="note"><p><strong>Dove brilla.</strong> Riff in staccato, parti ritmiche lo-fi, assoli che devono
+      suonare "rotti", tracce di synth, batterie e voci a cui vuoi dare grana e sporcizia. Funziona molto bene in
+      parallelo, mescolato al segnale pulito.</p></div>
+      <p>Il plugin non imita il risultato: ricostruisce il circuito e lo fa funzionare in tempo reale, componente per
+      componente. Per questo reagisce come l'originale al tocco, al volume della chitarra, al tipo di pick-up e persino
+      alla carica della batteria.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 3. INSTALLAZIONE ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">3</div>
+    <div><h1>Installazione</h1></div>
+    <p class="lead">FTG-1 funziona su macOS 11 o successivo, sia su Apple Silicon sia su Intel. Nel pacchetto trovi
+    il plugin VST3, il plugin AU e l'applicazione autonoma.</p>
+  </div>
+  <div class="row">
+    <div class="side"><b>Perché il Terminale?</b> Il plugin non è firmato da uno sviluppatore registrato Apple: il comando
+    toglie il blocco che macOS applica ai file scaricati.</div>
+    <ol class="steps main">
+      <li><div>Scarica <strong>FTG1-macOS.zip</strong> dalla pagina del progetto su GitHub, nella sezione Actions o
+      Releases, ed estrailo. Dentro c'è un secondo zip: estrai anche quello.</div></li>
+      <li><div>Apri il Terminale, scrivi <kbd>xattr -dr com.apple.quarantine</kbd> seguito da uno spazio, trascina nella
+      finestra la cartella <strong>FTG-1</strong> e premi Invio.</div></li>
+      <li><div>Fai doppio clic su <strong>Installa FTG-1.command</strong> e inserisci la password di amministratore. Il
+      plugin viene copiato nelle cartelle di sistema e l'app in Applicazioni.</div></li>
+      <li><div>Riavvia la DAW. FTG-1 compare tra gli effetti audio, sotto <strong>Collateral Effects</strong>, accanto
+      agli altri plugin del marchio.</div></li>
+    </ol>
+  </div>
+  <div class="row">
+    <div class="side"></div>
+    <div class="main">
+      <div class="note"><p><strong>Logic Pro non lo vede?</strong> Apri Gestione plug-in, seleziona FTG-1 e scegli
+      Reimposta e riscansiona.</p>
+      <p><strong>L'app autonoma non riceve audio?</strong> Al primo avvio macOS chiede il permesso di usare
+      l'ingresso audio: va concesso. Puoi verificarlo in Impostazioni di Sistema, Privacy e sicurezza, Microfono.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 4. INTERFACCIA ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">4</div>
+    <div><h1>L'interfaccia</h1></div>
+    <p class="lead">In basso il pedale, con i suoi due soli comandi, come l'originale. In alto una barra di servizio
+    con quello che serve in studio e che nel 1974 non c'era.</p>
+  </div>
+
+  <div class="split">
+    <div>
+      <figure class="gui">
+        <img src="img/gui.png" alt="Interfaccia di FTG-1">
+        <span class="pin" style="left:9.5%;top:3.2%">1</span>
+        <span class="pin" style="left:90.5%;top:3.2%">2</span>
+        <span class="pin" style="left:44%;top:3.8%">3</span>
+        <span class="pin" style="left:26%;top:9.8%">4</span>
+        <span class="pin" style="left:77%;top:3.8%">5</span>
+        <span class="pin" style="left:36%;top:29%">6</span>
+        <span class="pin" style="left:50%;top:68.5%">7</span>
+      </figure>
+    </div>
+    <div>
+      <ol class="legend">
+        <li><b>INPUT</b> regola il livello che entra nel pedale, da −24 a +24 dB. Più segnale significa un primo stadio
+        più saturo e un ramo fuzz più continuo.</li>
+        <li><b>OUTPUT</b> regola il livello d'uscita, sempre da −24 a +24 dB. Serve a bilanciare il volume, che cambia
+        molto con FUZZ INCREASE.</li>
+        <li><b>Display MIDI</b> mostra l'ultimo controllo ricevuto dalla tastiera e a quale comando è assegnato. Durante
+        il MIDI Learn ti dice che cosa sta aspettando.</li>
+        <li><b>PICKUP</b> dice al plugin che cosa è collegato: il tipo di pick-up della chitarra, oppure una sorgente di
+        linea. Con il pulsante "…" salvi e richiami le tue chitarre.</li>
+        <li><b>INTERNO</b> apre il fondo del pedale: batteria o alimentatore, carica e "temperamento" dei due transistor.</li>
+        <li><b>FUZZ INCREASE</b> la manopola dell'originale. Trascina in verticale; doppio clic per tornare al valore
+        iniziale (7,5).</li>
+        <li><b>ON/OFF</b> l'interruttore a slitta. In alto il pedale è acceso; in basso il segnale passa invariato e il
+        plugin smette di calcolare.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:2mm">
+    <div class="side"><b>Su ogni comando</b> il clic destro apre il menu del MIDI Learn.</div>
+    <div class="main">
+      <h2>Gesti utili</h2>
+      <table>
+        <tr><th style="width:38%">Gesto</th><th>Effetto</th></tr>
+        <tr><td class="k">Trascinare in verticale</td><td>Ruota la manopola.</td></tr>
+        <tr><td class="k">Doppio clic</td><td>Riporta il comando al valore predefinito.</td></tr>
+        <tr><td class="k">Clic destro</td><td>MIDI Learn, rimozione dell'assegnazione, ripristino della mappa predefinita.</td></tr>
+        <tr><td class="k">Clic sull'interruttore</td><td>Accende o spegne il pedale.</td></tr>
+        <tr><td class="k">Angolo in basso a destra</td><td>Ridimensiona la finestra dal 75% al 200%.</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 5. FUZZ INCREASE ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">5</div>
+    <div><h1>Leggere la manopola</h1></div>
+    <p class="lead">FUZZ INCREASE non è un gain. È un miscelatore: da una parte il primo stadio, dall'altra il ramo
+    fuzz. Girandola non aggiungi distorsione, sposti il suono dall'uno all'altro.</p>
+  </div>
+
+  <div class="map">
+    {{ARC}}
+    <div class="zone z1"><b>0 – 3</b>Il primo stadio. Pieno, scuro, il più forte di volume: circa 14 dB sopra la
+    chitarra pulita. Si sporca quando suoni forte.</div>
+    <div class="zone z2"><b>3 – 7</b>La miscela. Il ronzio sottile si posa sopra il suono scuro. Ogni nota trova il suo
+    equilibrio.</div>
+    <div class="zone z3"><b>7 – 10</b>Il ramo fuzz. Spilli, crepitio sulle code delle note, gamma completa e basso
+    sottile. Volume vicino a quello della chitarra.</div>
+  </div>
+
+  <div class="row">
+    <div class="side"><b>Il volume cambia</b> molto da un capo all'altro della corsa. È il comportamento dell'originale,
+    quello di cui si lamentava Albini.</div>
+    <div class="main">
+      <h2>Tenere il volume sotto controllo</h2>
+      <p>Il plugin lavora ai livelli reali del pedale: un segnale a 0 dBFS corrisponde a 1 volt di picco in ingresso e
+      l'uscita non viene corretta. Così, se abbassi FUZZ INCREASE, il suono diventa più forte; se la alzi, cala. Regola
+      OUTPUT dopo aver scelto la posizione della manopola, e confronta sempre acceso e spento a volume pari prima di
+      decidere.</p>
+      <h2>Il tocco e il volume della chitarra</h2>
+      <p>Come sull'originale, la dinamica conta. Una pennata leggera tiene il primo stadio quasi pulito e rende il ramo
+      fuzz più frammentato; una pennata decisa riempie entrambi. Abbassare il volume della chitarra pulisce il primo stadio
+      e rende il ramo fuzz più frammentato. Su una traccia DI registrata, INPUT fa la stessa cosa: picchi intorno a −12 dBFS
+      sono un buon punto di partenza.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 6. PICK-UP ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">6</div>
+    <div><h1>Pick-up e sorgenti</h1></div>
+    <p class="lead">Questo fuzz "beve" molto segnale dalla chitarra, e così il pick-up diventa parte del suono. Per
+    questo il plugin ha bisogno di sapere che cosa gli stai collegando.</p>
+  </div>
+  <div class="row">
+    <div class="side"><b>Perché conta.</b> La scheda audio registra la chitarra quasi senza caricarla, il pedale no.
+    Il plugin ricostruisce come sarebbe suonata la chitarra collegata direttamente al pedale.</div>
+    <div class="main">
+      <p>Scegli nel menu PICKUP la voce più vicina a quello che stai suonando. Un pick-up con molto avvolgimento
+      arriva al fuzz più scuro e morbido; una sorgente a bassa impedenza ci arriva brillante e piena.</p>
+      <table>
+        <tr><th style="width:34%">Voce</th><th>Quando usarla</th></tr>
+        <tr><td class="k">Ideale</td><td>Chitarra "neutra", senza il colore di un pick-up preciso. Utile per confrontare.</td></tr>
+        <tr><td class="k">Single coil</td><td>Stratocaster, Telecaster e simili. È la scelta iniziale.</td></tr>
+        <tr><td class="k">P-90</td><td>Pick-up P-90 e single coil molto avvolti: più medi, più scuro.</td></tr>
+        <tr><td class="k">Humbucker</td><td>Les Paul, SG e chitarre a doppia bobina.</td></tr>
+        <tr><td class="k">Linea / synth</td><td>Sintetizzatori, drum machine, voci, bus e tracce non di chitarra.</td></tr>
+        <tr><td class="k">Personalizzato</td><td>Inserisci resistenza (kΩ) e induttanza (H) del tuo pick-up, dai dati del costruttore.</td></tr>
+      </table>
+      <h2>Le mie chitarre</h2>
+      <p>Il pulsante "…" accanto al menu salva i valori attuali con il nome della chitarra: comparirà nella sezione
+      <em>Le mie chitarre</em> in tutti i progetti. Dallo stesso menu puoi eliminare una chitarra. Al primo avvio FTG-1
+      importa le chitarre già salvate in FYN-2.</p>
+      <div class="note"><p><strong>Re-amping.</strong> Se mandi al plugin una traccia DI registrata, scegli il pick-up
+      con cui l'hai registrata. Se la traccia è già passata da un altro effetto o da un preamplificatore, usa Linea.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 7. INTERNO ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">7</div>
+    <div><h1>Dentro la scatola</h1></div>
+    <p class="lead">Due esemplari dello stesso pedale non suonano mai identici: cambiano la batteria e i transistor.
+    Il pannello INTERNO ti lascia scegliere il tuo esemplare.</p>
+  </div>
+  <div class="split narrow">
+    <div>
+      <figure><img src="img/interno.png" alt="Il pannello Interno" style="border-radius:2mm"><figcaption>Il pannello
+      INTERNO, aperto sopra il pedale.</figcaption></figure>
+    </div>
+    <div>
+      <h2>Batteria o alimentatore</h2>
+      <p>L'originale andava solo a batteria. Con il selettore su <strong>BATT</strong> la manopola CARICA imposta la
+      tensione, da una pila nuova (9,6 V) a una ormai esaurita (4,5 V); il disegno della pila mostra la carica residua.
+      Una batteria stanca toglie spinta e spazio al primo stadio: il suono si fa più compresso e sgranato.
+      Con <strong>DC</strong> il pedale è alimentato a 9 V stabili.</p>
+      <h2>Il guadagno dei transistor</h2>
+      <p>Ogni transistor esce dalla fabbrica con un guadagno un po' diverso, e i costruttori lo dividevano in classi.
+      Le due manopole hFE regolano i due transistor del pedale, tra 60 e 560.</p>
+      <p><strong>hFE Q2</strong> agisce sul primo stadio ed è quella che si sente di più. Con valori bassi il primo stadio
+      resta più pulito e aperto e satura in modo più simmetrico; con valori alti si sporca prima e diventa più denso.</p>
+      <p><strong>hFE Q1</strong> agisce sul ramo fuzz, che lavora sempre al limite: le differenze ci sono ma sono sottili.</p>
+      <p>VALORI ORIGINALI riporta batteria a 9 V e guadagno 250 su entrambi, il punto medio di un esemplare tipico.</p>
+      <div class="note"><p><strong>Una pila che si scarica sul palco.</strong> CARICA si può assegnare a un controllo
+      MIDI: girandola lentamente durante un brano ottieni il suono di una batteria che muore, cosa che chi suonava
+      un Walco conosceva bene.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 8. MIDI ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">8</div>
+    <div><h1>MIDI e tastiera controller</h1></div>
+    <p class="lead">Tutti i comandi del pedale e dell'interno si possono muovere dalla tastiera: la manopola con un
+    encoder, l'interruttore con un pulsante o con il pedale del sustain.</p>
+  </div>
+  <div class="row">
+    <div class="side"><b>Arturia KeyLab.</b> Per l'interruttore imposta il pulsante in modalità Gate (momentaneo) in
+    MIDI Control Center: il plugin commuta a ogni pressione.</div>
+    <div class="main">
+      <h2>Assegnazioni predefinite</h2>
+      <table>
+        <tr><th style="width:42%">Comando</th><th style="width:20%">CC</th><th>Comportamento</th></tr>
+        <tr><td class="k">FUZZ INCREASE</td><td class="num">20</td><td>Continuo, da 0 a 127.</td></tr>
+        <tr><td class="k">ON/OFF</td><td class="num">64</td><td>Commuta a ogni pressione (pedale del sustain).</td></tr>
+      </table>
+      <h2>MIDI Learn</h2>
+      <p>Fai clic destro su un comando e scegli <em>MIDI Learn</em>. Il comando lampeggia e il display mostra che cosa
+      sta aspettando: muovi l'encoder o premi il pulsante sulla tastiera. Da quel momento il comando risponde a quel CC,
+      su qualsiasi canale MIDI. Si possono assegnare FUZZ INCREASE, ON/OFF, INPUT, OUTPUT, il selettore BATT/DC, CARICA
+      e le due manopole hFE.</p>
+      <p>Le assegnazioni vengono salvate insieme al progetto. Dal menu del clic destro puoi anche togliere
+      un'assegnazione o tornare alla mappa predefinita.</p>
+
+      <h2>Nella DAW</h2>
+      <h3>Ableton Live</h3>
+      <p>Metti FTG-1 sulla traccia della chitarra. Crea una traccia MIDI con ingresso la tua tastiera e, in
+      <em>MIDI To</em>, scegli la traccia della chitarra e poi FTG-1. In alternativa usa la mappatura MIDI di Live
+      (<kbd>⌘ M</kbd>), che funziona su tutti i parametri del plugin.</p>
+      <h3>Logic Pro</h3>
+      <p>In Logic il plugin AU si comporta da normale effetto audio e non riceve direttamente i CC. Usa l'assegnazione
+      dei controller di Logic: <kbd>⌘ K</kbd>, muovi il comando nel plugin, poi l'encoder sulla tastiera.</p>
+      <h3>Applicazione autonoma</h3>
+      <p>Nelle impostazioni audio e MIDI dell'app attiva la tastiera come ingresso MIDI: CC predefiniti e MIDI Learn
+      funzionano subito.</p>
+      <p>In ogni DAW tutti i parametri sono anche automatizzabili dalle corsie di automazione.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 9. STUDIO E LIVE ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">9</div>
+    <div><h1>In studio e dal vivo</h1></div>
+    <p class="lead">Qualche punto di partenza, provato sul suono del plugin. Nessuna regola: è un fuzz da un trucco
+    solo, e il bello è trovare dove quel trucco funziona.</p>
+  </div>
+  <div class="row">
+    <div class="side"><b>Mono.</b> Il pedale è mono: il plugin prende la chitarra da qualunque ingresso arrivi e
+    manda lo stesso segnale su entrambe le uscite.</div>
+    <div class="main">
+      <h2>Posizione nella catena</h2>
+      <p>Mettilo per primo, subito dopo la chitarra, come quando era agganciato alla cintura con il cavetto infilato nello
+      strumento. Prima di lui non mettere compressori o buffer: cambierebbero il modo in cui il pedale carica la
+      chitarra. Dopo di lui un amplificatore simulato con un po' di corpo restituisce il basso che il ramo fuzz toglie.</p>
+      <h2>In parallelo</h2>
+      <p>Il ramo fuzz da solo è sottile. Su una traccia di invio, o con il mix al 30–50% in un rack, aggiunge grana e
+      attacco a un suono pulito senza svuotarlo. È il modo più sicuro per usarlo su basso, batteria e voce.</p>
+      <h2>Sulle sorgenti non di chitarra</h2>
+      <p>Scegli <em>Linea / synth</em>. Su synth monofonici e drum machine il crepitio delle code diventa un effetto
+      ritmico; abbassa INPUT se il primo stadio si chiude troppo.</p>
+      <h2>Automazione</h2>
+      <p>Muovere FUZZ INCREASE durante un riff fa passare il suono da scuro e pieno a sottile e frammentato, senza
+      salti. Automatizzare ON/OFF è sicuro: l'interruttore entra ed esce con una breve dissolvenza, senza click.</p>
+      <h2>Dal vivo</h2>
+      <p>Con la KeyLab o un pedale del sustain l'interruttore va sotto il piede, come non era possibile sull'originale.
+      Un encoder su FUZZ INCREASE ti dà al volo la scelta tra le due anime. Il calcolo pesa un po' sul processore: se
+      lavori con buffer molto piccoli, tieni d'occhio il carico della DAW.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 10. PROBLEMI ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">10</div>
+    <div><h1>Problemi e soluzioni</h1></div>
+  </div>
+  <div class="row">
+    <div class="side"></div>
+    <div class="main">
+      <table>
+        <tr><th style="width:38%">Che cosa succede</th><th>Che cosa fare</th></tr>
+        <tr><td class="k">A 10 il volume è basso</td><td>È il comportamento originale. Alza OUTPUT.</td></tr>
+        <tr><td class="k">A 0 il volume è troppo alto</td><td>Anche questo è normale: il primo stadio esce più forte della chitarra. Abbassa OUTPUT.</td></tr>
+        <tr><td class="k">Le code delle note crepitano</td><td>È il carattere del ramo fuzz. Per una coda più lunga alza INPUT o porta FUZZ INCREASE sotto 7.</td></tr>
+        <tr><td class="k">Il suono è molto scuro</td><td>Controlla la voce PICKUP. Per synth e tracce già elaborate scegli Linea / synth.</td></tr>
+        <tr><td class="k">Il pedale non suona per niente</td><td>Controlla che l'interruttore sia su ON e che INPUT e OUTPUT non siano al minimo. Se hai cambiato i valori dell'interno, premi VALORI ORIGINALI.</td></tr>
+        <tr><td class="k">I CC non arrivano in Logic</td><td>Il plugin AU non riceve CC: usa <kbd>⌘ K</kbd> in Logic.</td></tr>
+        <tr><td class="k">L'interruttore scatta due volte</td><td>Il pulsante della tastiera è in modalità Toggle. Impostalo su Gate.</td></tr>
+        <tr><td class="k">Un encoder non risponde</td><td>Guarda il display MIDI: mostra il numero di CC ricevuto. Se è "non assegnato", rifai il MIDI Learn.</td></tr>
+        <tr><td class="k">Il plugin non compare nella DAW</td><td>Riavvia la DAW; in Logic usa Reimposta e riscansiona.</td></tr>
+        <tr><td class="k">L'app autonoma è muta</td><td>Concedi l'accesso al microfono in Impostazioni di Sistema e scegli l'ingresso giusto nelle impostazioni audio.</td></tr>
+        <tr><td class="k">Il carico del processore è alto</td><td>Aumenta il buffer della DAW, o congela la traccia quando il suono è deciso.</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 11. SPECIFICHE ============================== -->
+<section class="chapter">
+  <div class="chapter-head">
+    <div class="no">11</div>
+    <div><h1>Specifiche</h1></div>
+  </div>
+  <div class="row">
+    <div class="side"><b>Versione 1.0</b></div>
+    <div class="main">
+      <table>
+        <tr><td class="k" style="width:38%">Formati</td><td>VST3, Audio Unit, applicazione autonoma</td></tr>
+        <tr><td class="k">Sistema</td><td>macOS 11 o successivo, Apple Silicon e Intel</td></tr>
+        <tr><td class="k">Canali</td><td>mono o stereo in ingresso; elaborazione mono come l'originale</td></tr>
+        <tr><td class="k">Frequenze di lavoro</td><td>da 44,1 a 192 kHz; il circuito viene calcolato sempre tra 350 e 390 kHz</td></tr>
+        <tr><td class="k">Latenza</td><td class="num">6 campioni a 48 kHz</td></tr>
+        <tr><td class="k">Livelli</td><td>0 dBFS = 1 V di picco; uscita non compensata, come il pedale</td></tr>
+        <tr><td class="k">Comandi del pedale</td><td>FUZZ INCREASE, ON/OFF</td></tr>
+        <tr><td class="k">Barra di servizio</td><td>INPUT e OUTPUT (±24 dB), PICKUP, INTERNO, display MIDI</td></tr>
+        <tr><td class="k">Interno</td><td>batteria 4,5–9,6 V o alimentatore 9 V; hFE dei due transistor 60–560</td></tr>
+        <tr><td class="k">MIDI</td><td>CC 20 FUZZ INCREASE, CC 64 ON/OFF, MIDI Learn su otto comandi</td></tr>
+        <tr><td class="k">Interfaccia</td><td>ridimensionabile dal 75% al 200%</td></tr>
+      </table>
+
+      <h2>Fonti della parte storica</h2>
+      <ul class="sources">
+        <li>Effects Database, scheda Walco Fuzz Tone Generator e Kent EA-3 Fuzz Tone Bender. <span>effectsdatabase.com/model/walco/fuzz</span></li>
+        <li>Tagboard Effects, layout del Walco Fuzz Tone Generator e commenti, 2014. <span>tagboardeffects.blogspot.com/2014/03/walco-fuzz-tone-generator.html</span></li>
+        <li>Gye Greene, la serie completa degli effetti Walco, 2017. <span>gyegreene.blogspot.com/2017/07/walco-effects-pedals-or-effects-units.html</span></li>
+        <li>DIYstompboxes, discussione sugli schemi Walco, 2006. <span>diystompboxes.com/smfforum/index.php?topic=52076.0</span></li>
+        <li>Guitar World / Yahoo, Steve Albini e i suoi pedali peggiori, 2024. <span>yahoo.com/entertainment/meant-noise-gate-actually-makes-155856943.html</span></li>
+        <li>Reverb, Walco Fuzz Tone Generator, MIJ, 1970s. <span>reverb.com/item/12180889-walco-fuzz-tone-generator-mij-1970s</span></li>
+        <li>Ingenium, puntine Walco Electronics Co., East Orange (N.J.). <span>collection.ingeniumcanada.org/en/id/1996.0560.001</span></li>
+        <li>Audio Magazine, pubblicità Walco-Linck Corp., Clifton (N.J.), 1977. <span>gammaelectronics.xyz/audio_12-1977_walco.html</span></li>
+        <li>Kent Guitars (kentfoto.com) e Reverb, sul marchio Kent di Buegeleisen &amp; Jacobson. <span>kentfoto.com/music/KentGuitars</span></li>
+        <li>Wikipedia, Glenn Snoddy e il Maestro FZ-1. <span>en.wikipedia.org/wiki/Glenn_Snoddy</span></li>
+      </ul>
+      <p style="font-size:7.8pt;color:var(--chrome);margin-top:4mm">Walco, Kent e Maestro sono marchi dei rispettivi
+      proprietari, citati solo a scopo storico. FTG-1 è un progetto indipendente e non è affiliato a nessuno di loro.
+      Caratteri: Archivo (SIL Open Font License).</p>
+    </div>
+  </div>
+</section>
+
+<section class="back">
+  <div class="hang"></div>
+  <div class="mark"><b>Collateral Effects</b>FTG-1 Fuzz Tone Generator<br>Manuale d'uso, versione 1.0</div>
+</section>
+
+</body>
+</html>
