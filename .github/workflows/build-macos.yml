@@ -1,0 +1,67 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # per pubblicare le release quando si crea un tag v*
+
+jobs:
+  macos:
+    runs-on: macos-15          # Apple Silicon
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache JUCE
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: juce-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
+
+      - name: Configura (universal binary arm64 + x86_64)
+        run: cmake -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      - name: Compila
+        run: cmake --build build --config Release --parallel
+
+      - name: Test del modello
+        run: ./build/Release/circuit_test && ./build/Release/click_test
+
+      - name: Test del processore (blocchi, CC MIDI, ON/OFF, stato)
+        run: |
+          cmake -B build-test -DFTG_BUILD_PLUGIN=OFF -DFTG_BUILD_TESTS=OFF -DFTG_BUILD_PROCESSOR_TEST=ON \
+                -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DFETCHCONTENT_BASE_DIR=build/_deps
+          cmake --build build-test --parallel
+          ./build-test/processor_test_artefacts/Release/processor_test
+
+      - name: Firma ad-hoc e pacchetto
+        run: |
+          A=build/FTG1_artefacts/Release
+          mkdir -p "dist/FTG-1"
+          cp -R "$A/VST3/FTG-1.vst3" "$A/AU/FTG-1.component" "$A/Standalone/FTG-1.app" "dist/FTG-1/"
+          for p in "dist/FTG-1/"*; do codesign --force --deep --sign - "$p"; done
+          cp scripts/installa.command "dist/FTG-1/Installa FTG-1.command"
+          chmod +x "dist/FTG-1/Installa FTG-1.command"
+          cp README.md "dist/FTG-1/"
+          lipo -info "dist/FTG-1/FTG-1.vst3/Contents/MacOS/FTG-1"
+          ls "dist/FTG-1/FTG-1.app/Contents/Resources/"   # deve contenere Icon.icns
+          (cd dist && ditto -c -k --keepParent "FTG-1" ../FTG1-macOS.zip)
+
+      - name: Carica l'artefatto
+        uses: actions/upload-artifact@v4
+        with:
+          name: FTG1-macOS
+          path: FTG1-macOS.zip
+
+      - name: Pubblica la release (solo per i tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" FTG1-macOS.zip \
+            --title "Collateral Effects FTG-1 ${GITHUB_REF_NAME}" \
+            --notes "Build macOS universale (Apple Silicon e Intel) con VST3, AU e Standalone."

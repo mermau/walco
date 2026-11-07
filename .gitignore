@@ -1,0 +1,6 @@
+build/
+dist/
+.DS_Store
+*.zip
+build-*/
+demo_*.wav
