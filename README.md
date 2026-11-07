@@ -13,6 +13,7 @@ comando (FUZZ INCREASE) e l'interruttore a slitta ON/OFF.
 | FUZZ INCREASE (50k lineare) | 20 |
 | Interruttore ON/OFF | 64 (pedale sustain: commuta alla pressione) |
 | INPUT / OUTPUT (trim di servizio, barra superiore) | — |
+| VOLUME (volume della chitarra, barra superiore) | — |
 
 **FUZZ INCREASE** non è un "gain": il potenziometro miscela due uscite. Tutto a sinistra (lug 1)
 si sente il primo stadio (Q2), già saturo con segnali forti ma pieno e scuro; girando in senso
@@ -39,6 +40,10 @@ Humbucker, Personalizzato) oppure **Linea / synth** (300 Ω) per sorgenti a bass
 sintetizzatori, drum machine o tracce già registrate in linea. Con il pulsante "…" salvi i valori con
 il nome della chitarra ("Le mie chitarre"); al primo avvio vengono riprese quelle salvate in FYN-2.
 
+**VOLUME** riproduce il potenziometro del volume della chitarra (logaritmico, 250k o 500k secondo
+il pick-up). Con l'ingresso così basso del pedale si comporta quasi da rubinetto: da 10 a 8 il livello
+cala di circa 25 dB. Con "Ideale" e "Linea" è disattivato.
+
 Come in FYN-2, con un pick-up selezionato il plugin ricostruisce il segnale del pick-up prima del
 circuito (la scheda audio registra a 1 MΩ, il pedale no); con "Ideale" e "Linea" la correzione è spenta.
 
@@ -49,7 +54,10 @@ circuito (la scheda audio registra a 1 MΩ, il pedale no); con "Ideale" e "Linea
 - **hFE Q2 / hFE Q1** (60–560): guadagno dei due 2SC828 (classi Q 130–260, R 180–360, S 260–520).
   Q2 conta molto: con hFE basso il collettore sale (6 V a hFE 60) e il primo stadio diventa più
   pulito e simmetrico; con hFE alto scende verso 2 V e satura prima. Q1 è così "affamato" che
-  il suo hFE cambia poco. "VALORI ORIGINALI" riporta 9 V e hFE 250.
+  il suo hFE cambia poco.
+- **QUALITÀ DEL CALCOLO**: ALTA (circuito a ~384 kHz) o ECO (~192 kHz, metà del carico, un po' più di
+  aliasing sulle note acute a fuzz pieno). Il cambio è immediato. "VALORI ORIGINALI" riporta 9 V,
+  hFE 250 e qualità ALTA.
 
 ## Il circuito
 
@@ -79,18 +87,26 @@ Punto di lavoro calcolato (9 V, hFE 250): Q2 collettore 3,1 V (1,25 mA), Q1 coll
 
 ## Il modello
 
-- Analisi nodale a 10 nodi con tutti i componenti, il pick-up (R, L, capacità propria, pot della
-  chitarra), il cavo e il carico dell'ampli (1 MΩ); condensatori e induttanza con la regola dei trapezi.
-- Q1 e Q2 con Ebers-Moll completo (giunzioni B-E e B-C, β diretto e inverso, Cbe e Cbc),
-  risolti con Newton-Raphson sulle 4 tensioni di giunzione (metodo "K"/DK), con predittore.
+- Analisi nodale a 11 nodi con tutti i componenti, il pick-up (R, L, capacità propria), i potenziometri
+  di volume e tono della chitarra, il cordone corto d'ingresso del pedale, il cavo lungo verso l'ampli
+  (in uscita, dove l'impedenza alta del ramo fuzz lo rende udibile) e il carico dell'ampli (1 MΩ);
+  condensatori e induttanza con la regola dei trapezi.
+- Q1 e Q2 con Ebers-Moll completo (giunzioni B-E e B-C, β diretto e inverso, Cbe e Cbc), effetto
+  Early (VAF 80 V) e rottura inversa della giunzione B-E a 8 V (il datasheet garantisce VEBO ≥ 7 V):
+  con segnali forti la base di Q1 viene spinta a −8 V attraverso i 100 nF.
+- Newton-Raphson sulle 4 tensioni di giunzione (metodo "K"/DK), con predittore; ci si ferma quando il
+  passo è sotto 10 µV (errore residuo −186 dB rispetto a una soluzione esatta), in media 1,4–2 iterazioni.
 - Punto di lavoro iniziale con Eulero implicito a passo largo (meno di 1 ms).
-- Il circuito gira sempre a 350–390 kHz: oversampling 8× a 44.1/48 kHz, 4× a 88.2/96 kHz,
-  2× a 176.4/192 kHz. Latenza 6 campioni. Circa il 12% di un core a 48 kHz sul server di
-  compilazione Linux (meno su Apple Silicon).
+- Con qualità ALTA il circuito gira a 350–390 kHz: oversampling 8× a 44.1/48 kHz, 4× a 88.2/96 kHz,
+  2× a 176.4/192 kHz; ECO dimezza. Latenza 6 campioni. Circa il 7% di un core a 48 kHz (ALTA) sul
+  server di compilazione Linux, meno su Apple Silicon; con l'ingresso in silenzio e il circuito a riposo
+  il calcolo si ferma (0,1%), come con l'interruttore su OFF.
+- Rumore: il rumore termico e shot calcolato su questi componenti resta intorno a −107 dBV, sotto la
+  soglia udibile: non viene simulato.
 
 **Limiti noti**: il layout è la sola fonte (non c'è uno schema di fabbrica né un esemplare misurato);
-l'hFE dei 2SC828 originali non è noto e si usa un valore centrale; la rottura inversa della giunzione
-B-E (circa 5 V) non è modellata; il verso del pot (orario = più fuzz) segue la scritta
+l'hFE dei 2SC828 originali non è noto e si usa un valore centrale; la tensione esatta di rottura B-E
+degli esemplari dell'epoca non è nota (si usa 8 V); il verso del pot (orario = più fuzz) segue la scritta
 "FUZZ INCREASE" con la freccia verso destra.
 
 ## Scaricare la versione per Mac (Apple Silicon e Intel)
@@ -122,8 +138,8 @@ cmake --build build --config Release
 ```
 
 Test: `circuit_test` (punto di lavoro, livelli, CPU), `click_test` (niente salti del risolutore con
-pot, pick-up, batteria e hFE mossi suonando) e, con `-DFTG_BUILD_PROCESSOR_TEST=ON`, `processor_test`
-(blocchi della DAW, CC 20/64, MIDI Learn, bypass, salvataggio dello stato). Girano tutti su GitHub.
+pot, volume della chitarra, pick-up, batteria e hFE mossi suonando) e, con `-DFTG_BUILD_PROCESSOR_TEST=ON`, `processor_test`
+(blocchi della DAW, CC 20/64, MIDI Learn, bypass, ALTA/ECO, pausa in silenzio, salvataggio dello stato). Girano tutti su GitHub.
 `-DFTG_BUILD_SNAPSHOT=ON` compila lo strumento che rigenera `resources/icon.png` e lo screenshot.
 
 ## Grafica e caratteri

@@ -10,7 +10,7 @@ int main()
     FuzzToneCircuit c;
     c.setPickup (Pickup::ideal());
     c.prepare (fs);
-    const char* names[] = { "PU", "IN", "B2", "C2", "B1", "C1", "X", "F3", "F1", "OUT" };
+    const char* names[] = { "PU", "PK", "IN", "B2", "C2", "B1", "C1", "X", "F3", "F1", "OUT" };
     std::printf ("Punto di lavoro (9 V, hFE 250):\n");
     for (int n = 0; n < FuzzToneCircuit::N; ++n) std::printf ("  %-3s %8.4f V\n", names[n], c.nodeVoltage (n));
     const double vc2 = c.nodeVoltage (FuzzToneCircuit::C2), vc1 = c.nodeVoltage (FuzzToneCircuit::C1);
@@ -36,6 +36,22 @@ int main()
                 std::printf ("%-8s fuzz %.1f  in %.2f Vpk -> %.3f Vrms (pk %.3f)  mancate conv. %d\n", pu.n, fz, a, rms, pk, fails);
                 ok &= std::isfinite (rms) && fails == 0;
             }
+
+    // volume della chitarra: il livello deve scendere in modo monotono
+    {
+        double prevR = 1e9; bool mono = true;
+        for (double gv : { 1.0, 0.8, 0.6, 0.4, 0.2, 0.0 })
+        {
+            c.setPickup (Pickup::humbucker()); c.setFuzz (0.0); c.setGuitarVolume (gv); c.reset();
+            double r = 0; const int len = (int) (0.2 * fs);
+            for (int i = 0; i < len; ++i) { const double o = c.process (0.3 * std::sin (2 * kPi * 196.0 * i / fs)); if (i > len / 2) r += o * o; }
+            r = std::sqrt (r / (len / 2));
+            std::printf ("volume chitarra %.1f -> %.4f Vrms\n", gv, r);
+            mono &= r <= prevR * 1.0001; prevR = r;
+        }
+        ok &= mono;
+        c.setGuitarVolume (1.0);
+    }
 
     c.setPickup (Pickup::singleCoil()); c.setFuzz (1.0); c.reset();
     const auto t0 = std::chrono::steady_clock::now();

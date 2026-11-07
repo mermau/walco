@@ -47,6 +47,8 @@ int main (int argc, char** argv)
     ed.reset();
     proc.apvts.getParameter (ParamIDs::bypass)->setValueNotifyingHost (1.0f);
     proc.apvts.getParameter (ParamIDs::fuzz)->setValueNotifyingHost (0.0f);
+    proc.apvts.getParameter (ParamIDs::pickup)->setValueNotifyingHost (1.0f);   // Personalizzato
+    proc.apvts.getParameter (ParamIDs::gtrVol)->setValueNotifyingHost (0.7f);
     ed.reset (proc.createEditor());
     ed->setSize (FuzzToneEditor::baseW * 2, FuzzToneEditor::baseH * 2);
     save (ed->createComponentSnapshot (ed->getLocalBounds(), true, 1.0f), "screenshot_off.png");

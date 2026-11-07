@@ -12,6 +12,7 @@ public:
     PedalLookAndFeel();
     void drawRotarySlider (juce::Graphics&, int x, int y, int w, int h, float pos,
                            float startAngle, float endAngle, juce::Slider&) override;
+    juce::Font getComboBoxFont (juce::ComboBox& b) override { return juce::Font (juce::FontOptions (juce::jmin (30.0f, (float) b.getHeight() * 0.46f))); }
     juce::Font getTextButtonFont (juce::TextButton&, int buttonHeight) override
     {
         return juce::Font (juce::FontOptions (juce::jmin (15.0f, (float) buttonHeight * 0.34f), juce::Font::bold));
@@ -41,11 +42,13 @@ public:
     void mouseUp (const juce::MouseEvent& e) override { if (! e.mods.isPopupMenu()) Button::mouseUp (e); }
 };
 
-// Deviatore a slitta BATTERIA / ALIMENTATORE del pannello interno
+// Deviatore a slitta a due posizioni del pannello interno (BATT/DC, ALTA/ECO)
 class SupplySwitch : public juce::Button
 {
 public:
-    SupplySwitch() : juce::Button ("Supply") { setClickingTogglesState (true); }
+    SupplySwitch (juce::String left = "BATT", juce::String right = "DC")
+        : juce::Button ("Switch"), leftText (std::move (left)), rightText (std::move (right)) { setClickingTogglesState (true); }
+    juce::String leftText, rightText;
     std::function<void()> onLearnMenu;
     void paintButton (juce::Graphics&, bool highlighted, bool down) override;
     void mouseDown (const juce::MouseEvent& e) override;
@@ -76,10 +79,10 @@ private:
 
     FuzzToneProcessor& proc;
     juce::Typeface::Ptr face;
-    SupplySwitch supply;
+    SupplySwitch supply, quality { "ALTA 8x", "ECO 4x" };
     LearnableSlider charge, hfe1, hfe2;
     juce::TextButton resetBtn { "VALORI ORIGINALI" }, closeBtn { "CHIUDI" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> supplyA;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> supplyA, qualityA;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> chargeA, hfe1A, hfe2A;
     float k = 1.0f, lastV = -1.0f, lastH1 = -1.0f, lastH2 = -1.0f;
     bool lastDC = false;
@@ -126,14 +129,14 @@ private:
     FuzzToneProcessor& proc;
     PedalLookAndFeel lnf;
 
-    LearnableSlider fuzz, inTrim, outTrim;
+    LearnableSlider fuzz, inTrim, outTrim, gtrVol;
     SlideSwitch onOff;
     juce::ComboBox pickupBox;
     juce::Slider pickR, pickL;
 
     using SA = juce::AudioProcessorValueTreeState::SliderAttachment;
     using BA = juce::AudioProcessorValueTreeState::ButtonAttachment;
-    std::unique_ptr<SA> fuzzA, inA, outA;
+    std::unique_ptr<SA> fuzzA, inA, outA, gtrA;
     std::unique_ptr<BA> bypassA;
     juce::TextButton pickupMenuBtn { juce::String::fromUTF8 ("\xe2\x80\xa6") };
     juce::TextButton interiorBtn { "INTERNO" };

@@ -27,7 +27,7 @@ namespace
     }
 
     const char* displayNames[] = { "FUZZ INCREASE", "ON / OFF", "INPUT", "OUTPUT",
-                                   "ALIMENTAZIONE", "CARICA", "hFE Q1", "hFE Q2" };
+                                   "ALIMENTAZIONE", "CARICA", "hFE Q1", "hFE Q2", "VOLUME CHITARRA" };
 
     // classi di guadagno del 2SC828 (Q 130-260, R 180-360, S 260-520; si sovrappongono)
     juce::String hfeClass (float h)
@@ -295,9 +295,9 @@ void SupplySwitch::paintButton (juce::Graphics& g, bool highlighted, bool)
     if (highlighted) { g.setColour (Colours::white.withAlpha (0.08f)); g.fillRoundedRectangle (knob, knob.getHeight() * 0.2f); }
     g.setFont (Font (FontOptions (b.getHeight() * 0.34f, Font::bold)));
     g.setColour (dc ? Colour (0xff9a9da2) : Colour (0xff18191b));
-    g.drawText ("BATT", half, Justification::centred);
+    g.drawText (leftText, half, Justification::centred);
     g.setColour (dc ? Colour (0xff18191b) : Colour (0xff9a9da2));
-    g.drawText ("DC", half.withX (b.getCentreX()), Justification::centred);
+    g.drawText (rightText, half.withX (b.getCentreX()), Justification::centred);
 }
 
 //==============================================================================
@@ -335,7 +335,11 @@ InteriorPanel::InteriorPanel (FuzzToneProcessor& p, juce::Typeface::Ptr panelFac
     addAndMakeVisible (supply);
     supplyA = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment> (proc.apvts, ParamIDs::supply, supply);
 
-    resetBtn.setTooltip ("Batteria a 9 V e transistor a hFE 250");
+    quality.setTooltip ("Qualità del calcolo: ALTA (circuito a ~384 kHz) o ECO (~192 kHz, metà del carico sul processore, un po' più di aliasing)");
+    addAndMakeVisible (quality);
+    qualityA = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment> (proc.apvts, ParamIDs::quality, quality);
+
+    resetBtn.setTooltip ("Batteria a 9 V, transistor a hFE 250, qualità ALTA");
     resetBtn.onClick = [this] { resetToOriginal(); };
     closeBtn.onClick = [this] { if (onClose) onClose(); };
     addAndMakeVisible (resetBtn);
@@ -361,8 +365,9 @@ void InteriorPanel::resized()
     charge.setBounds (area (230, 186, 100, 100));
     hfe2.setBounds   (area (60, 404, 100, 100));    // Q2 = primo stadio, a sinistra
     hfe1.setBounds   (area (220, 404, 100, 100));   // Q1 = stadio fuzz, a destra
-    resetBtn.setBounds (area (44, 594, 180, 32));
-    closeBtn.setBounds (area (240, 594, 96, 32));
+    quality.setBounds  (area (24, 594, 136, 32));
+    resetBtn.setBounds (area (170, 594, 122, 32));
+    closeBtn.setBounds (area (300, 594, 56, 32));
 }
 
 juce::Component* InteriorPanel::controlFor (int idx)
@@ -388,6 +393,7 @@ void InteriorPanel::resetToOriginal()
     set (ParamIDs::battery, (float) Battery::nominalV);
     set (ParamIDs::hfeQ1, 250.0f);
     set (ParamIDs::hfeQ2, 250.0f);
+    set (ParamIDs::quality, 0.0f);
 }
 
 void InteriorPanel::timerCallback()
@@ -515,6 +521,10 @@ void InteriorPanel::paint (juce::Graphics& g)
     g.setFont (uiFont (9.0f, false));
     g.drawText (String::fromUTF8 ("2SC828: classi Q 130\xe2\x80\x93" "260, R 180\xe2\x80\x93" "360, S 260\xe2\x80\x93" "520"),
                 Rectangle<float> (pcb.getX(), 547, pcb.getWidth(), 14), Justification::centred);
+
+    g.setColour (Colour (0xff9a9da2));
+    g.setFont (uiFont (9.0f));
+    g.drawText (String::fromUTF8 ("QUALIT\xc3\x80 DEL CALCOLO"), Rectangle<float> (24, 579, 136, 12), Justification::centred);
 }
 
 //==============================================================================
@@ -709,11 +719,15 @@ FuzzToneEditor::FuzzToneEditor (FuzzToneProcessor& p)
     setupKnob (fuzz,    ParamIDs::fuzz,   false);
     setupKnob (inTrim,  ParamIDs::input,  true);
     setupKnob (outTrim, ParamIDs::output, true);
+    setupKnob (gtrVol,  ParamIDs::gtrVol, true);
+    gtrVol.setDoubleClickReturnValue (true, 10.0);
+    gtrVol.setTooltip ("Volume della chitarra (pot logaritmico): con questo pedale anche un piccolo calo pulisce e abbassa molto il suono. Clic destro: MIDI Learn");
     fuzz.setTooltip ("FUZZ INCREASE: in senso orario dal segnale del primo stadio al ramo fuzz. Clic destro: MIDI Learn");
 
     fuzzA = std::make_unique<SA> (proc.apvts, ParamIDs::fuzz,   fuzz);
     inA   = std::make_unique<SA> (proc.apvts, ParamIDs::input,  inTrim);
     outA  = std::make_unique<SA> (proc.apvts, ParamIDs::output, outTrim);
+    gtrA  = std::make_unique<SA> (proc.apvts, ParamIDs::gtrVol, gtrVol);
 
     onOff.onLearnMenu = [this] { showLearnMenu (FuzzToneProcessor::idxBypass, &onOff); };
     onOff.setTooltip ("Interruttore ON/OFF. Clic destro: MIDI Learn");
@@ -738,11 +752,12 @@ FuzzToneEditor::FuzzToneEditor (FuzzToneProcessor& p)
     addAndMakeVisible (interiorBtn);
     for (auto* s : { &pickR, &pickL })
     {
-        s->setSliderStyle (juce::Slider::LinearHorizontal);
-        s->setTextBoxStyle (juce::Slider::TextBoxLeft, false, 48, 20);
+        s->setSliderStyle (juce::Slider::LinearBar);
+        s->setTextBoxStyle (juce::Slider::TextBoxLeft, false, 54, 24);   // su LinearBar il valore sta dentro la barra
         s->setColour (juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
         s->setColour (juce::Slider::textBoxTextColourId, cream);
-        s->setColour (juce::Slider::trackColourId, juce::Colour (0xff6e6a74));
+        s->setColour (juce::Slider::trackColourId, juce::Colour (0xff4a3a50));
+        s->setColour (juce::Slider::backgroundColourId, juce::Colour (0xff1c1a1e));
         s->setColour (juce::Slider::thumbColourId, cream);
         addAndMakeVisible (s);
     }
@@ -786,10 +801,11 @@ void FuzzToneEditor::resized()
     // barra di servizio
     place (inTrim,  40.0f,  25.0f, 34.0f, 34.0f);
     place (outTrim, 380.0f, 25.0f, 34.0f, 34.0f);
-    pickupBox.setBounds     (base (62.0f,  64.0f, 168.0f, 24.0f).toNearestInt());
-    pickupMenuBtn.setBounds (base (234.0f, 64.0f, 26.0f,  24.0f).toNearestInt());
-    pickR.setBounds         (base (264.0f, 64.0f, 76.0f,  24.0f).toNearestInt());
-    pickL.setBounds         (base (342.0f, 64.0f, 72.0f,  24.0f).toNearestInt());
+    pickupBox.setBounds     (base (62.0f,  64.0f, 132.0f, 24.0f).toNearestInt());
+    pickupMenuBtn.setBounds (base (198.0f, 64.0f, 24.0f,  24.0f).toNearestInt());
+    pickR.setBounds         (base (226.0f, 64.0f, 54.0f,  24.0f).toNearestInt());
+    pickL.setBounds         (base (283.0f, 64.0f, 50.0f,  24.0f).toNearestInt());
+    place (gtrVol, 396.0f, 76.0f, 28.0f, 28.0f);
     interiorBtn.setBounds   (base (298.0f, 12.0f, 52.0f,  36.0f).toNearestInt());
     if (interior != nullptr)
         interior->setBounds (base (20.0f, pedalY + 14.0f, InteriorPanel::baseW, InteriorPanel::baseH).toNearestInt());
@@ -822,6 +838,7 @@ void FuzzToneEditor::renderBackground()
     g.drawText ("INPUT",  Rectangle<float> (14.0f, 42.0f, 52.0f, 12.0f), Justification::centred);
     g.drawText ("OUTPUT", Rectangle<float> (354.0f, 42.0f, 52.0f, 12.0f), Justification::centred);
     g.drawText ("PICKUP", Rectangle<float> (14.0f, 64.0f, 46.0f, 24.0f), Justification::centredLeft);
+    g.drawText ("VOLUME", Rectangle<float> (336.0f, 64.0f, 44.0f, 24.0f), Justification::centredRight);
 
     drawPedal (g, pedalBody, panelFace, scriptFace, true);
 }
@@ -884,6 +901,7 @@ juce::Component* FuzzToneEditor::controlFor (int idx)
         case FuzzToneProcessor::idxBypass: return &onOff;
         case FuzzToneProcessor::idxInput:  return &inTrim;
         case FuzzToneProcessor::idxOutput: return &outTrim;
+        case FuzzToneProcessor::idxGtrVol: return &gtrVol;
         case FuzzToneProcessor::idxSupply: case FuzzToneProcessor::idxBattery:
         case FuzzToneProcessor::idxHfe1:   case FuzzToneProcessor::idxHfe2:
             return interior != nullptr && interior->isVisible() ? interior->controlFor (idx) : nullptr;
@@ -905,6 +923,9 @@ void FuzzToneEditor::timerCallback()
         lastPickup = pu;
         const bool custom = pu == PickupChoice::custom;
         pickR.setVisible (custom); pickL.setVisible (custom);
+        const bool hasPots = pu != PickupChoice::ideal && pu != PickupChoice::line;
+        gtrVol.setEnabled (hasPots);
+        gtrVol.setAlpha (hasPots ? 1.0f : 0.35f);
     }
     if (learn >= 0 || learn != lastLearn || mv != lastMapVersion || cnt != lastCCCount)
     {
@@ -972,10 +993,10 @@ void FuzzToneEditor::rebuildPickupBox()
 {
     pickupBox.clear (juce::dontSendNotification);
     pickupBox.addItem (juce::String::fromUTF8 ("Ideale (10 k\xce\xa9)"), 1);
-    pickupBox.addItem (juce::String::fromUTF8 ("Single coil (6 k\xce\xa9, 2.5 H)"), 2);
-    pickupBox.addItem (juce::String::fromUTF8 ("P-90 (8 k\xce\xa9, 6 H)"), 3);
-    pickupBox.addItem (juce::String::fromUTF8 ("Humbucker (10 k\xce\xa9, 5 H)"), 4);
-    pickupBox.addItem (juce::String::fromUTF8 ("Linea / synth (300 \xce\xa9)"), 5);
+    pickupBox.addItem (juce::String::fromUTF8 ("Single coil (6 k\xce\xa9)"), 2);
+    pickupBox.addItem (juce::String::fromUTF8 ("P-90 (8 k\xce\xa9)"), 3);
+    pickupBox.addItem (juce::String::fromUTF8 ("Humbucker (10 k\xce\xa9)"), 4);
+    pickupBox.addItem ("Linea / synth", 5);
     pickupBox.addItem ("Personalizzato", 6);
 
     const auto& entries = library.getEntries();

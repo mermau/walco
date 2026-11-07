@@ -18,6 +18,7 @@ static double runCase (double peak, double fz, double h1, double h2, bool sweep,
         if (i % 128 == 0)
         {
             if (sweep) c.setFuzz (0.5 + 0.5 * std::sin (2 * kPi * 0.7 * t));
+            if (sweep) c.setGuitarVolume (0.75 + 0.25 * std::sin (2 * kPi * 0.31 * t));
             if (drain) c.setSupply (9.6 - 5.1 * std::min (1.0, t / 2.5));
             if (sweep && i % (128 * 3000) == 0) c.setPickup ((i / (128 * 3000)) % 2 ? Pickup::singleCoil() : Pickup::humbucker());
         }

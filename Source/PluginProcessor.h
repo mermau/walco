@@ -15,6 +15,8 @@ namespace ParamIDs
     inline constexpr const char* pickup  = "pickup";
     inline constexpr const char* pickupR = "pickupR";
     inline constexpr const char* pickupL = "pickupL";
+    inline constexpr const char* gtrVol  = "gtrVol";    // volume della chitarra
+    inline constexpr const char* quality = "quality";   // Alta (8x) / Eco (4x)
     // pannello "interno"
     inline constexpr const char* supply  = "supply";    // Batteria / Alimentatore 9 V
     inline constexpr const char* battery = "battery";   // tensione della batteria (V)
@@ -79,10 +81,10 @@ public:
     // MIDI CC: mappa e MIDI Learn (senza lock). I CC arrivano sul thread audio, che
     // scrive in una coda di atomici; un timer sul thread dei messaggi li applica ai
     // parametri (così l'host riceve le notifiche dal thread giusto).
-    static constexpr int numLearnable = 8;
+    static constexpr int numLearnable = 9;
     static const std::array<const char*, numLearnable> learnableIDs;
     static constexpr int idxFuzz = 0, idxBypass = 1, idxInput = 2, idxOutput = 3,
-                         idxSupply = 4, idxBattery = 5, idxHfe1 = 6, idxHfe2 = 7;
+                         idxSupply = 4, idxBattery = 5, idxHfe1 = 6, idxHfe2 = 7, idxGtrVol = 8;
 
     int  getLearnIndex (const juce::String& paramID) const;
     void startLearn (int paramIndex)  { learningParam.store (paramIndex); }
@@ -103,10 +105,16 @@ private:
     void timerCallback() override;
 
     ftg::FuzzToneCircuit circuit;
-    std::unique_ptr<juce::dsp::Oversampling<float>> oversampling;
+    // due catene di sovracampionamento pronte: Alta (~384 kHz) ed Eco (~192 kHz)
+    std::unique_ptr<juce::dsp::Oversampling<float>> osHigh, osEco;
+    juce::dsp::Oversampling<float>* oversampling = nullptr;
+    int activeQuality = 0;
+    double hostRate = 48000.0;
+    void applyQuality (int q);
+    int idleBlocks = 0;
     juce::dsp::DryWetMixer<float> mixer { 256 };
 
-    juce::SmoothedValue<float> fuzzSm, inGainSm, outGainSm, vccSm, hfe1Sm, hfe2Sm;
+    juce::SmoothedValue<float> fuzzSm, inGainSm, outGainSm, vccSm, hfe1Sm, hfe2Sm, gtrSm;
 
     std::atomic<float>* fuzzRaw    = nullptr;
     std::atomic<float>* bypassRaw  = nullptr;
@@ -119,6 +127,8 @@ private:
     std::atomic<float>* batteryRaw = nullptr;
     std::atomic<float>* hfe1Raw    = nullptr;
     std::atomic<float>* hfe2Raw    = nullptr;
+    std::atomic<float>* gtrRaw     = nullptr;
+    std::atomic<float>* qualityRaw = nullptr;
     float targetSupply() const;
     ftg::Pickup currentPickup() const;
     juce::AudioParameterBool* bypassParam = nullptr;

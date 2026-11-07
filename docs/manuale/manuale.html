@@ -35,6 +35,7 @@ body {
   font-feature-settings: "kern", "liga";
 }
 p { margin: 0 0 0.62em; }
+.main > :last-child, .row:last-child, section > :last-child { margin-bottom: 0; }
 em { font-style: italic; }
 strong { font-weight: 650; }
 a { color: inherit; text-decoration: none; }
@@ -161,14 +162,14 @@ td.k { font-weight: 650; white-space: nowrap; }
 .num { font-variant-numeric: tabular-nums; }
 
 /* la mappa di FUZZ INCREASE */
-.map { position: relative; height: 112mm; margin: 2mm 0 4mm; break-inside: avoid; }
-.map svg { position: absolute; left: 24mm; top: 0; width: 126mm; }
+.map { position: relative; height: 100mm; margin: 2mm 0 4mm; break-inside: avoid; }
+.map svg { position: absolute; left: 29mm; top: 0; width: 114mm; }
 .map svg .tick { font: 800 11px "Archivo"; font-stretch: 125%; fill: #2B1231; text-anchor: middle; }
 .zone { position: absolute; width: 44mm; font-size: 8.4pt; line-height: 1.38; }
 .zone b { display: block; font-size: 10pt; font-weight: 800; font-stretch: 118%; margin-bottom: .6mm; }
-.zone.z1 { left: 0; top: 62mm; }
-.zone.z2 { left: 61mm; top: 95mm; width: 52mm; text-align: center; }
-.zone.z3 { right: 0; top: 62mm; text-align: right; }
+.zone.z1 { left: 0; top: 54mm; }
+.zone.z2 { left: 60mm; top: 84mm; width: 52mm; text-align: center; }
+.zone.z3 { right: 0; top: 54mm; text-align: right; }
 
 kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(--mist); border-radius: 1mm; padding: .1mm 1.2mm; }
 
@@ -371,9 +372,10 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
         <span class="pin" style="left:90.5%;top:3.2%">2</span>
         <span class="pin" style="left:44%;top:3.8%">3</span>
         <span class="pin" style="left:26%;top:9.8%">4</span>
-        <span class="pin" style="left:77%;top:3.8%">5</span>
-        <span class="pin" style="left:36%;top:29%">6</span>
-        <span class="pin" style="left:50%;top:68.5%">7</span>
+        <span class="pin" style="left:94.3%;top:9.8%">5</span>
+        <span class="pin" style="left:77%;top:3.8%">6</span>
+        <span class="pin" style="left:36%;top:29%">7</span>
+        <span class="pin" style="left:50%;top:68.5%">8</span>
       </figure>
     </div>
     <div>
@@ -386,6 +388,8 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
         il MIDI Learn ti dice che cosa sta aspettando.</li>
         <li><b>PICKUP</b> dice al plugin che cosa è collegato: il tipo di pick-up della chitarra, oppure una sorgente di
         linea. Con il pulsante "…" salvi e richiami le tue chitarre.</li>
+        <li><b>VOLUME</b> è il potenziometro del volume della chitarra, da 0 a 10. Il pedale lo "sente" come
+        l'avrebbe sentito l'originale collegato allo strumento.</li>
         <li><b>INTERNO</b> apre il fondo del pedale: batteria o alimentatore, carica e "temperamento" dei due transistor.</li>
         <li><b>FUZZ INCREASE</b> la manopola dell'originale. Trascina in verticale; doppio clic per tornare al valore
         iniziale (7,5).</li>
@@ -440,10 +444,13 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
       OUTPUT dopo aver scelto la posizione della manopola, e confronta sempre acceso e spento a volume pari prima di
       decidere.</p>
       <h2>Il tocco e il volume della chitarra</h2>
-      <p>Come sull'originale, la dinamica conta. Una pennata leggera tiene il primo stadio quasi pulito e rende il ramo
-      fuzz più frammentato; una pennata decisa riempie entrambi. Abbassare il volume della chitarra pulisce il primo stadio
-      e rende il ramo fuzz più frammentato. Su una traccia DI registrata, INPUT fa la stessa cosa: picchi intorno a −12 dBFS
-      sono un buon punto di partenza.</p>
+      <p>Come sull'originale, la dinamica conta. Una pennata leggera tiene il primo stadio quasi
+      pulito e rende il ramo fuzz più frammentato; una pennata decisa riempie entrambi. Su una traccia DI registrata,
+      INPUT regola quanto forte "suoni": picchi intorno a −12 dBFS sono un buon punto di partenza.</p>
+      <p>La manopola VOLUME della barra fa un'altra cosa: riproduce il potenziometro del volume della chitarra. Questo
+      pedale assorbe molta corrente dallo strumento, e così il volume della chitarra agisce quasi come un rubinetto:
+      basta scendere da 10 a 8 per perdere gran parte del livello e del fuzz, e sotto il 5 resta un filo di suono
+      sottile e crepitante. È il motivo per cui, sull'originale, il volume della chitarra si teneva a 10.</p>
     </div>
   </div>
 </section>
@@ -471,6 +478,8 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
         <tr><td class="k">Linea / synth</td><td>Sintetizzatori, drum machine, voci, bus e tracce non di chitarra.</td></tr>
         <tr><td class="k">Personalizzato</td><td>Inserisci resistenza (kΩ) e induttanza (H) del tuo pick-up, dai dati del costruttore.</td></tr>
       </table>
+      <p>Con <em>Ideale</em> e <em>Linea / synth</em> non ci sono potenziometri della chitarra, quindi la manopola
+      VOLUME è spenta.</p>
       <h2>Le mie chitarre</h2>
       <p>Il pulsante "…" accanto al menu salva i valori attuali con il nome della chitarra: comparirà nella sezione
       <em>Le mie chitarre</em> in tutti i progetti. Dallo stesso menu puoi eliminare una chitarra. Al primo avvio FTG-1
@@ -506,7 +515,13 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
       <p><strong>hFE Q2</strong> agisce sul primo stadio ed è quella che si sente di più. Con valori bassi il primo stadio
       resta più pulito e aperto e satura in modo più simmetrico; con valori alti si sporca prima e diventa più denso.</p>
       <p><strong>hFE Q1</strong> agisce sul ramo fuzz, che lavora sempre al limite: le differenze ci sono ma sono sottili.</p>
-      <p>VALORI ORIGINALI riporta batteria a 9 V e guadagno 250 su entrambi, il punto medio di un esemplare tipico.</p>
+      <h2>Qualità del calcolo</h2>
+      <p>Con <strong>ALTA</strong> il circuito viene calcolato a circa 384 kHz, otto volte la frequenza di un progetto
+      a 48 kHz. <strong>ECO</strong> dimezza la frequenza interna e il carico sul processore, in cambio di un po' di
+      aliasing in più sulle note acute con il fuzz al massimo. Usa ALTA in studio e al mixaggio, ECO se suoni dal vivo
+      con molte tracce aperte o buffer piccoli. Il cambio è immediato e non interrompe il suono.</p>
+      <p>VALORI ORIGINALI riporta batteria a 9 V, guadagno 250 su entrambi i transistor e qualità ALTA: il punto medio
+      di un esemplare tipico.</p>
       <div class="note"><p><strong>Una pila che si scarica sul palco.</strong> CARICA si può assegnare a un controllo
       MIDI: girandola lentamente durante un brano ottieni il suono di una batteria che muore, cosa che chi suonava
       un Walco conosceva bene.</p></div>
@@ -535,8 +550,10 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
       <h2>MIDI Learn</h2>
       <p>Fai clic destro su un comando e scegli <em>MIDI Learn</em>. Il comando lampeggia e il display mostra che cosa
       sta aspettando: muovi l'encoder o premi il pulsante sulla tastiera. Da quel momento il comando risponde a quel CC,
-      su qualsiasi canale MIDI. Si possono assegnare FUZZ INCREASE, ON/OFF, INPUT, OUTPUT, il selettore BATT/DC, CARICA
-      e le due manopole hFE.</p>
+      su qualsiasi canale MIDI. Si possono assegnare FUZZ INCREASE, ON/OFF, VOLUME, INPUT, OUTPUT, il selettore
+      BATT/DC, CARICA e le due manopole hFE.</p>
+      <div class="note"><p><strong>Volume a pedale.</strong> Assegna VOLUME al pedale d'espressione della KeyLab per
+      gli attacchi "a violino", con la risposta brusca tipica di questo fuzz.</p></div>
       <p>Le assegnazioni vengono salvate insieme al progetto. Dal menu del clic destro puoi anche togliere
       un'assegnazione o tornare alla mappa predefinita.</p>
 
@@ -550,8 +567,7 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
       dei controller di Logic: <kbd>⌘ K</kbd>, muovi il comando nel plugin, poi l'encoder sulla tastiera.</p>
       <h3>Applicazione autonoma</h3>
       <p>Nelle impostazioni audio e MIDI dell'app attiva la tastiera come ingresso MIDI: CC predefiniti e MIDI Learn
-      funzionano subito.</p>
-      <p>In ogni DAW tutti i parametri sono anche automatizzabili dalle corsie di automazione.</p>
+      funzionano subito. In ogni DAW tutti i parametri si possono anche automatizzare.</p>
     </div>
   </div>
 </section>
@@ -583,8 +599,9 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
       salti. Automatizzare ON/OFF è sicuro: l'interruttore entra ed esce con una breve dissolvenza, senza click.</p>
       <h2>Dal vivo</h2>
       <p>Con la KeyLab o un pedale del sustain l'interruttore va sotto il piede, come non era possibile sull'originale.
-      Un encoder su FUZZ INCREASE ti dà al volo la scelta tra le due anime. Il calcolo pesa un po' sul processore: se
-      lavori con buffer molto piccoli, tieni d'occhio il carico della DAW.</p>
+      Un encoder su FUZZ INCREASE ti dà al volo la scelta tra le due anime. Se lavori con buffer molto piccoli o con
+      molte tracce, passa a ECO nel pannello INTERNO. Quando la traccia è in silenzio, o l'interruttore è su OFF, il
+      plugin smette di calcolare e non pesa sul processore.</p>
     </div>
   </div>
 </section>
@@ -604,13 +621,14 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
         <tr><td class="k">A 0 il volume è troppo alto</td><td>Anche questo è normale: il primo stadio esce più forte della chitarra. Abbassa OUTPUT.</td></tr>
         <tr><td class="k">Le code delle note crepitano</td><td>È il carattere del ramo fuzz. Per una coda più lunga alza INPUT o porta FUZZ INCREASE sotto 7.</td></tr>
         <tr><td class="k">Il suono è molto scuro</td><td>Controlla la voce PICKUP. Per synth e tracce già elaborate scegli Linea / synth.</td></tr>
-        <tr><td class="k">Il pedale non suona per niente</td><td>Controlla che l'interruttore sia su ON e che INPUT e OUTPUT non siano al minimo. Se hai cambiato i valori dell'interno, premi VALORI ORIGINALI.</td></tr>
+        <tr><td class="k">Il suono sparisce abbassando VOLUME</td><td>È normale: il pedale carica molto la chitarra. Tieni VOLUME vicino a 10 e regola il livello con OUTPUT.</td></tr>
+        <tr><td class="k">Il pedale non suona per niente</td><td>Controlla che l'interruttore sia su ON e che VOLUME, INPUT e OUTPUT non siano al minimo. Se hai cambiato i valori dell'interno, premi VALORI ORIGINALI.</td></tr>
         <tr><td class="k">I CC non arrivano in Logic</td><td>Il plugin AU non riceve CC: usa <kbd>⌘ K</kbd> in Logic.</td></tr>
         <tr><td class="k">L'interruttore scatta due volte</td><td>Il pulsante della tastiera è in modalità Toggle. Impostalo su Gate.</td></tr>
         <tr><td class="k">Un encoder non risponde</td><td>Guarda il display MIDI: mostra il numero di CC ricevuto. Se è "non assegnato", rifai il MIDI Learn.</td></tr>
         <tr><td class="k">Il plugin non compare nella DAW</td><td>Riavvia la DAW; in Logic usa Reimposta e riscansiona.</td></tr>
         <tr><td class="k">L'app autonoma è muta</td><td>Concedi l'accesso al microfono in Impostazioni di Sistema e scegli l'ingresso giusto nelle impostazioni audio.</td></tr>
-        <tr><td class="k">Il carico del processore è alto</td><td>Aumenta il buffer della DAW, o congela la traccia quando il suono è deciso.</td></tr>
+        <tr><td class="k">Il carico del processore è alto</td><td>Passa a ECO nel pannello INTERNO, aumenta il buffer della DAW o congela la traccia quando il suono è deciso.</td></tr>
       </table>
     </div>
   </div>
@@ -623,19 +641,19 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
     <div><h1>Specifiche</h1></div>
   </div>
   <div class="row">
-    <div class="side"><b>Versione 1.0</b></div>
+    <div class="side"><b>Versione 1.1</b></div>
     <div class="main">
       <table>
         <tr><td class="k" style="width:38%">Formati</td><td>VST3, Audio Unit, applicazione autonoma</td></tr>
         <tr><td class="k">Sistema</td><td>macOS 11 o successivo, Apple Silicon e Intel</td></tr>
         <tr><td class="k">Canali</td><td>mono o stereo in ingresso; elaborazione mono come l'originale</td></tr>
-        <tr><td class="k">Frequenze di lavoro</td><td>da 44,1 a 192 kHz; il circuito viene calcolato sempre tra 350 e 390 kHz</td></tr>
+        <tr><td class="k">Frequenze di lavoro</td><td>da 44,1 a 192 kHz; il circuito viene calcolato tra 350 e 390 kHz (ALTA) o a metà (ECO)</td></tr>
         <tr><td class="k">Latenza</td><td class="num">6 campioni a 48 kHz</td></tr>
         <tr><td class="k">Livelli</td><td>0 dBFS = 1 V di picco; uscita non compensata, come il pedale</td></tr>
         <tr><td class="k">Comandi del pedale</td><td>FUZZ INCREASE, ON/OFF</td></tr>
-        <tr><td class="k">Barra di servizio</td><td>INPUT e OUTPUT (±24 dB), PICKUP, INTERNO, display MIDI</td></tr>
-        <tr><td class="k">Interno</td><td>batteria 4,5–9,6 V o alimentatore 9 V; hFE dei due transistor 60–560</td></tr>
-        <tr><td class="k">MIDI</td><td>CC 20 FUZZ INCREASE, CC 64 ON/OFF, MIDI Learn su otto comandi</td></tr>
+        <tr><td class="k">Barra di servizio</td><td>INPUT e OUTPUT (±24 dB), PICKUP, VOLUME della chitarra, INTERNO, display MIDI</td></tr>
+        <tr><td class="k">Interno</td><td>batteria 4,5–9,6 V o alimentatore 9 V; hFE dei due transistor 60–560; qualità ALTA o ECO</td></tr>
+        <tr><td class="k">MIDI</td><td>CC 20 FUZZ INCREASE, CC 64 ON/OFF, MIDI Learn su nove comandi</td></tr>
         <tr><td class="k">Interfaccia</td><td>ridimensionabile dal 75% al 200%</td></tr>
       </table>
 
@@ -661,7 +679,7 @@ kbd { font-family: inherit; font-weight: 650; font-size: .92em; background: var(
 
 <section class="back">
   <div class="hang"></div>
-  <div class="mark"><b>Collateral Effects</b>FTG-1 Fuzz Tone Generator<br>Manuale d'uso, versione 1.0</div>
+  <div class="mark"><b>Collateral Effects</b>FTG-1 Fuzz Tone Generator<br>Manuale d'uso, versione 1.1</div>
 </section>
 
 </body>

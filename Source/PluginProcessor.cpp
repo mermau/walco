@@ -3,7 +3,7 @@
 
 const std::array<const char*, FuzzToneProcessor::numLearnable> FuzzToneProcessor::learnableIDs {
     ParamIDs::fuzz, ParamIDs::bypass, ParamIDs::input, ParamIDs::output,
-    ParamIDs::supply, ParamIDs::battery, ParamIDs::hfeQ1, ParamIDs::hfeQ2
+    ParamIDs::supply, ParamIDs::battery, ParamIDs::hfeQ1, ParamIDs::hfeQ2, ParamIDs::gtrVol
 };
 
 //==============================================================================
@@ -34,6 +34,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout FuzzToneProcessor::createLay
     layout.add (std::make_unique<AudioParameterFloat> (ParameterID { ParamIDs::pickupL, 1 }, "Pickup L",
         NormalisableRange<float> (0.5f, 10.0f, 0.05f), 4.0f, AudioParameterFloatAttributes().withLabel ("H")));
 
+    layout.add (std::make_unique<AudioParameterFloat> (ParameterID { ParamIDs::gtrVol, 1 }, "Guitar Volume",
+        NormalisableRange<float> (0.0f, 10.0f, 0.01f), 10.0f,
+        AudioParameterFloatAttributes().withStringFromValueFunction ([] (float v, int) { return String (v, 1); })));
+
     // pannello interno
     layout.add (std::make_unique<AudioParameterChoice> (ParameterID { ParamIDs::supply, 1 }, "Supply",
         StringArray { "Battery", "DC 9 V" }, 0));
@@ -44,6 +48,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout FuzzToneProcessor::createLay
     auto hfeRange = [] { NormalisableRange<float> r (60.0f, 560.0f, 1.0f); r.setSkewForCentre (250.0f); return r; };
     layout.add (std::make_unique<AudioParameterFloat> (ParameterID { ParamIDs::hfeQ1, 1 }, "hFE Q1", hfeRange(), 250.0f));
     layout.add (std::make_unique<AudioParameterFloat> (ParameterID { ParamIDs::hfeQ2, 1 }, "hFE Q2", hfeRange(), 250.0f));
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { ParamIDs::quality, 1 }, "Quality",
+        StringArray { "Alta (8x)", "Eco (4x)" }, 0));
     return layout;
 }
 
@@ -64,6 +70,8 @@ FuzzToneProcessor::FuzzToneProcessor()
     batteryRaw = apvts.getRawParameterValue (ParamIDs::battery);
     hfe1Raw    = apvts.getRawParameterValue (ParamIDs::hfeQ1);
     hfe2Raw    = apvts.getRawParameterValue (ParamIDs::hfeQ2);
+    gtrRaw     = apvts.getRawParameterValue (ParamIDs::gtrVol);
+    qualityRaw = apvts.getRawParameterValue (ParamIDs::quality);
     bypassParam = dynamic_cast<juce::AudioParameterBool*> (apvts.getParameter (ParamIDs::bypass));
 
     for (int i = 0; i < numLearnable; ++i)
@@ -195,27 +203,28 @@ void FuzzToneProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     maxBlock = juce::jmax (1, samplesPerBlock);
     osChannels = (int) numCh;
 
-    // il circuito gira sempre a circa 350-390 kHz: 8x a 44.1/48 kHz, 4x a 88.2/96 kHz,
-    // 2x a 176.4/192 kHz
+    // Alta: il circuito gira a circa 350-390 kHz (8x a 44.1/48 kHz, 4x a 88.2/96 kHz,
+    // 2x a 176.4/192 kHz). Eco: metà della frequenza interna, metà del carico.
+    hostRate = sampleRate;
     const int order = sampleRate > 300000.0 ? 0 : (sampleRate > 120000.0 ? 1 : (sampleRate > 60000.0 ? 2 : 3));
-    oversampling = std::make_unique<juce::dsp::Oversampling<float>> (
-        1, (size_t) order, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true, true);
-    oversampling->initProcessing ((size_t) samplesPerBlock);
+    using OS = juce::dsp::Oversampling<float>;
+    osHigh = std::make_unique<OS> (1, (size_t) order, OS::filterHalfBandPolyphaseIIR, true, true);
+    osEco  = std::make_unique<OS> (1, (size_t) juce::jmax (0, order - 1), OS::filterHalfBandPolyphaseIIR, true, true);
+    osHigh->initProcessing ((size_t) samplesPerBlock);
+    osEco->initProcessing ((size_t) samplesPerBlock);
 
-    const double osRate = sampleRate * (double) oversampling->getOversamplingFactor();
     circuit.setPickup (currentPickup());
     circuit.setSupply (targetSupply());
     circuit.setHfe (hfe1Raw->load(), hfe2Raw->load());
     circuit.setFuzz (fuzzRaw->load());
-    circuit.prepare (osRate);
+    circuit.setGuitarVolume (gtrRaw->load() / 10.0f);
 
-    const auto latency = oversampling->getLatencyInSamples();
-    setLatencySamples (juce::roundToInt (latency));
+    mixer.prepare ({ sampleRate, (juce::uint32) samplesPerBlock, (juce::uint32) numCh });
+    applyQuality ((int) qualityRaw->load());
 
     mixer.setMixingRule (juce::dsp::DryWetMixingRule::linear);
     mixer.setWetMixProportion (bypassRaw->load() > 0.5f ? 0.0f : 1.0f);
-    mixer.prepare ({ sampleRate, (juce::uint32) samplesPerBlock, (juce::uint32) numCh });
-    mixer.setWetLatency (latency);
+    idleBlocks = 0;
 
     bypassFadeSamples = juce::roundToInt (0.08 * sampleRate);
     lastBypassState = bypassRaw->load() > 0.5f;
@@ -230,6 +239,20 @@ void FuzzToneProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     initSm (vccSm,  targetSupply(),  0.15);
     initSm (hfe1Sm, hfe1Raw->load(), 0.10);
     initSm (hfe2Sm, hfe2Raw->load(), 0.10);
+    initSm (gtrSm,  gtrRaw->load() / 10.0f, 0.03);
+}
+
+// cambia la catena di sovracampionamento e riporta il circuito al punto di lavoro
+// alla nuova frequenza interna (meno di 1 ms, si può fare sul thread audio)
+void FuzzToneProcessor::applyQuality (int q)
+{
+    activeQuality = q;
+    oversampling = (q == 1) ? osEco.get() : osHigh.get();
+    oversampling->reset();
+    circuit.prepare (hostRate * (double) oversampling->getOversamplingFactor());
+    const auto latency = oversampling->getLatencyInSamples();
+    setLatencySamples (juce::roundToInt (latency));
+    mixer.setWetLatency (latency);
 }
 
 void FuzzToneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
@@ -254,6 +277,8 @@ void FuzzToneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     vccSm.setTargetValue (targetSupply());
     hfe1Sm.setTargetValue (hfe1Raw->load());
     hfe2Sm.setTargetValue (hfe2Raw->load());
+    gtrSm.setTargetValue (gtrRaw->load() / 10.0f);
+    if ((int) qualityRaw->load() != activeQuality) applyQuality ((int) qualityRaw->load());
     const bool bypassed = bypassRaw->load() > 0.5f;
     mixer.setWetMixProportion (bypassed ? 0.0f : 1.0f);
 
@@ -266,6 +291,8 @@ void FuzzToneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         hfe1Sm.setCurrentAndTargetValue (hfe1Raw->load());
         hfe2Sm.setCurrentAndTargetValue (hfe2Raw->load());
         fuzzSm.setCurrentAndTargetValue (fuzzRaw->load());
+        gtrSm.setCurrentAndTargetValue (gtrRaw->load() / 10.0f);
+        circuit.setGuitarVolume (gtrSm.getCurrentValue());
         circuit.setSupply (vccSm.getCurrentValue());
         circuit.setHfe (hfe1Sm.getCurrentValue(), hfe2Sm.getCurrentValue());
         circuit.setFuzz (fuzzSm.getCurrentValue());
@@ -283,6 +310,7 @@ void FuzzToneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     juce::dsp::AudioBlock<float> full (buffer);
     full = full.getSubsetChannelBlock (0, (size_t) numCh);
     const int factor = (int) oversampling->getOversamplingFactor();
+    if (circuitIdle) idleBlocks = 0;
 
     for (int offset = 0; offset < buffer.getNumSamples(); offset += maxBlock)
     {
@@ -307,6 +335,22 @@ void FuzzToneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
 
         for (int i = 0; i < n; ++i) x[i] *= inGainSm.getNextValue() * voltsPerFS;
 
+        // silenzio in ingresso, circuito a riposo e comandi fermi: il calcolo si ferma
+        // (l'uscita del pedale è comunque nulla) e riparte appena arriva segnale
+        const bool silent = juce::FloatVectorOperations::findMaximum (x, n) < 1.0e-7f
+                         && juce::FloatVectorOperations::findMinimum (x, n) > -1.0e-7f;
+        const bool still = ! (fuzzSm.isSmoothing() || vccSm.isSmoothing() || hfe1Sm.isSmoothing()
+                              || hfe2Sm.isSmoothing() || gtrSm.isSmoothing());
+        idleBlocks = (silent && still && circuit.isSettled()) ? idleBlocks + 1 : 0;
+        if (idleBlocks > 2)
+        {
+            juce::FloatVectorOperations::clear (x, n);
+            outGainSm.skip (n);
+            for (int ch = 1; ch < numCh; ++ch) juce::FloatVectorOperations::clear (block.getChannelPointer ((size_t) ch), n);
+            mixer.mixWetSamples (block);
+            continue;
+        }
+
         auto up = oversampling->processSamplesUp (mono);
         auto* d = up.getChannelPointer (0);
 
@@ -314,6 +358,7 @@ void FuzzToneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         {
             const int len = juce::jmin (controlBlock, n - start);
             circuit.setFuzz (fuzzSm.skip (len));
+            circuit.setGuitarVolume (gtrSm.skip (len));
             circuit.setSupply (vccSm.skip (len));
             circuit.setHfe (hfe1Sm.skip (len), hfe2Sm.skip (len));
             for (int i = start * factor, end = (start + len) * factor; i < end; ++i)

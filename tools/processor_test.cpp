@@ -86,6 +86,43 @@ int main()
     }
     check (finite, "cambio pick-up e batteria a 4.5 V senza errori");
 
+    // qualità ECO e ritorno ad ALTA mentre suona
+    {
+        auto* q = p.apvts.getParameter (ParamIDs::quality);
+        q->setValueNotifyingHost (1.0f);
+        finite = true;
+        for (int b = 0; b < 20; ++b) { fill (0.4f); p.processBlock (buf, none); finite &= std::isfinite (rms()) && rms() > 1e-4f; }
+        const int latEco = p.getLatencySamples();
+        q->setValueNotifyingHost (0.0f);
+        for (int b = 0; b < 20; ++b) { fill (0.4f); p.processBlock (buf, none); finite &= std::isfinite (rms()) && rms() > 1e-4f; }
+        std::printf ("latenza ECO %d, ALTA %d campioni\n", latEco, p.getLatencySamples());
+        check (finite, "commutazione ALTA / ECO durante la riproduzione");
+    }
+
+    // silenzio: il calcolo si ferma e riparte senza salti
+    {
+        juce::AudioBuffer<float> z (2, bs);
+        float maxOut = 0;
+        for (int b = 0; b < 200; ++b) { buf.clear(); p.processBlock (buf, none); if (b >= 150) maxOut = std::max (maxOut, buf.getMagnitude (0, bs)); }
+        const auto t0 = std::chrono::steady_clock::now();
+        for (int b = 0; b < 400; ++b) { buf.clear(); p.processBlock (buf, none); }
+        const double sec = std::chrono::duration<double> (std::chrono::steady_clock::now() - t0).count();
+        std::printf ("CPU in silenzio: %.2f%% di un core\n", sec / (400.0 * bs / sr) * 100.0);
+        float rr = 0;
+        for (int b = 0; b < 4; ++b) { fill (0.3f); p.processBlock (buf, none); rr = rms(); }
+        std::printf ("  coda in silenzio %.2e, dopo la ripartenza %.3f rms\n", maxOut, rr);
+        check (std::isfinite (rr) && rr > 1e-3f && maxOut < 1e-3f, "pausa in silenzio e ripartenza");
+    }
+
+    // volume chitarra via CC appreso
+    p.startLearn (FuzzToneProcessor::idxGtrVol);
+    m.clear(); m.addEvent (juce::MidiMessage::controllerEvent (1, 75, 10), 0);
+    fill (0.3f); p.processBlock (buf, m);
+    m.clear(); m.addEvent (juce::MidiMessage::controllerEvent (1, 75, 64), 0);
+    fill (0.3f); p.processBlock (buf, m); pump (100);
+    check (std::abs (p.apvts.getRawParameterValue (ParamIDs::gtrVol)->load() - 5.04f) < 0.05f, "MIDI Learn sul volume della chitarra");
+    p.apvts.getParameter (ParamIDs::gtrVol)->setValueNotifyingHost (1.0f);
+
     // CPU
     p.apvts.getParameter (ParamIDs::fuzz)->setValueNotifyingHost (1.0f);
     const auto t0 = std::chrono::steady_clock::now();
