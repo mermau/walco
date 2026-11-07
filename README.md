@@ -98,8 +98,9 @@ Punto di lavoro calcolato (9 V, hFE 250): Q2 collettore 3,1 V (1,25 mA), Q1 coll
   passo è sotto 10 µV (errore residuo −186 dB rispetto a una soluzione esatta), in media 1,4–2 iterazioni.
 - Punto di lavoro iniziale con Eulero implicito a passo largo (meno di 1 ms).
 - Con qualità ALTA il circuito gira a 350–390 kHz: oversampling 8× a 44.1/48 kHz, 4× a 88.2/96 kHz,
-  2× a 176.4/192 kHz; ECO dimezza. Latenza 6 campioni. Circa il 7% di un core a 48 kHz (ALTA) sul
-  server di compilazione Linux, meno su Apple Silicon; con l'ingresso in silenzio e il circuito a riposo
+  2× a 176.4/192 kHz; ECO dimezza. Latenza 6 campioni. A 48 kHz in ALTA il plugin usa circa il 7%
+  di un core sul server Linux di sviluppo e il 12-13% sulla macchina virtuale macOS di GitHub; ECO
+  dimezza questi valori. Con l'ingresso in silenzio e il circuito a riposo
   il calcolo si ferma (0,1%), come con l'interruttore su OFF.
 - Rumore: il rumore termico e shot calcolato su questi componenti resta intorno a −107 dBV, sotto la
   soglia udibile: non viene simulato.
