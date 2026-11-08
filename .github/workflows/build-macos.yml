@@ -57,11 +57,27 @@ jobs:
           name: FTG1-macOS
           path: FTG1-macOS.zip
 
-      - name: Pubblica la release (solo per i tag v*)
-        if: startsWith(github.ref, 'refs/tags/v')
+      # Release: con un tag v* oppure, sul ramo main, quando la versione in CMakeLists.txt
+      # non ha ancora un tag (si alza la versione, si fa push, la release si crea da sola)
+      - name: Pubblica la release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" FTG1-macOS.zip \
-            --title "Collateral Effects FTG-1 ${GITHUB_REF_NAME}" \
-            --notes "Build macOS universale (Apple Silicon e Intel) con VST3, AU e Standalone."
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG="$GITHUB_REF_NAME"
+          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
+            VER=$(sed -nE 's/^project\(FTG1 VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
+            TAG="v$VER"
+            if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "La release $TAG esiste già: niente da fare"; exit 0
+            fi
+          else
+            exit 0
+          fi
+          NOTES="Build macOS universale (Apple Silicon e Intel): VST3, AU, applicazione autonoma, installatore e manuale d'uso in PDF.
+
+          Installazione: estrai lo zip, togli la quarantena con xattr -dr com.apple.quarantine sulla cartella FTG-1, poi doppio clic su Installa FTG-1.command (vedi il capitolo 3 del manuale)."
+          gh release create "$TAG" FTG1-macOS.zip docs/FTG-1_Manuale.pdf \
+            -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Collateral Effects FTG-1 $TAG" --notes "$NOTES"
